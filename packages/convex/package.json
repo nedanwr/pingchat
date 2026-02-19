@@ -10,6 +10,11 @@
     "codegen": "convex codegen"
   },
   "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@convex-dev/auth": "^0.0.90",
     "convex": "^1.32.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
   }
 }
