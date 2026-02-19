@@ -1,0 +1,15 @@
+{
+  "name": "@pingchat/convex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "dev:once": "convex dev --once",
+    "deploy": "convex deploy",
+    "codegen": "convex codegen"
+  },
+  "dependencies": {
+    "convex": "^1.32.0"
+  }
+}
