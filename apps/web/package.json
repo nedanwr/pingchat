@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@convex-dev/auth": "^0.0.90",
     "@t3-oss/env-nextjs": "^0.12.0",
+    "convex": "^1.32.0",
     "next": "^15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
