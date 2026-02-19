@@ -4,8 +4,11 @@
   "version": "0.1.0",
   "scripts": {
     "dev:web": "pnpm --filter web dev",
+    "dev:convex": "pnpm --filter @pingchat/convex dev",
     "build:web": "pnpm --filter web build",
     "typecheck:web": "pnpm --filter web typecheck",
+    "codegen:convex": "pnpm --filter @pingchat/convex codegen",
+    "deploy:convex": "pnpm --filter @pingchat/convex deploy",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
