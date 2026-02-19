@@ -1,0 +1,11 @@
+{
+  "name": "@pingchat/monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "typecheck:web": "pnpm --filter web typecheck"
+  },
+  "packageManager": "pnpm@10.7.1"
+}
