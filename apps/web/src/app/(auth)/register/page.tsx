@@ -90,184 +90,184 @@ export default function RegisterPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
-      <section className="w-full max-w-md space-y-6 rounded-xl border border-border/60 bg-card p-8 text-card-foreground shadow-sm">
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight">Create account</h1>
-          <p className="text-sm text-muted-foreground">Start your workspace.</p>
-        </div>
+    <section className="bg-background/70 border-border/50 text-card-foreground w-full space-y-6 rounded-[calc(var(--radius-2xl)-2px)] border p-8 backdrop-blur-xl">
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold tracking-tight">Create account</h1>
+        <p className="text-muted-foreground text-sm">Start your workspace.</p>
+      </div>
 
-        <form
-          className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void form.handleSubmit();
+      <form
+        className="space-y-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <form.Field name="username">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  autoComplete="username"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="username"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  type="text"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
           }}
+        </form.Field>
+
+        <form.Field name="displayName">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display name</Label>
+                <Input
+                  autoComplete="name"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="displayName"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  placeholder="Optional"
+                  type="text"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
+          }}
+        </form.Field>
+
+        <form.Field name="email">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  autoComplete="email"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="email"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  type="email"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
+          }}
+        </form.Field>
+
+        <form.Field name="password">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  autoComplete="new-password"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="password"
+                  minLength={8}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  type="password"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
+          }}
+        </form.Field>
+
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
-          <form.Field name="username">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    autoComplete="username"
-                    id="username"
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    type="text"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              className="mt-1 w-full"
+              disabled={!canSubmit || isLoading || isAuthenticated}
+              type="submit"
+            >
+              {isSubmitting ? "Creating..." : "Create account"}
+            </Button>
+          )}
+        </form.Subscribe>
 
-          <form.Field name="displayName">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display name</Label>
-                  <Input
-                    autoComplete="name"
-                    id="displayName"
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    placeholder="Optional"
-                    type="text"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
+        <p className="text-muted-foreground text-center text-sm">
+          Already have an account?{" "}
+          <Link className="underline underline-offset-4" href="/login">
+            Login
+          </Link>
+        </p>
+      </form>
 
-          <form.Field name="email">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    autoComplete="email"
-                    id="email"
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    type="email"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
+      {isAuthenticated ? (
+        <Button
+          className="w-full"
+          onClick={() => {
+            void signOut();
+          }}
+          type="button"
+          variant="outline"
+        >
+          Sign out
+        </Button>
+      ) : null}
 
-          <form.Field name="password">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    autoComplete="new-password"
-                    id="password"
-                    minLength={8}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    type="password"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
-
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                className="mt-1 w-full"
-                disabled={!canSubmit || isLoading || isAuthenticated}
-                type="submit"
-              >
-                {isSubmitting ? "Creating..." : "Create account"}
-              </Button>
-            )}
-          </form.Subscribe>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link className="underline underline-offset-4" href="/login">
-              Login
-            </Link>
-          </p>
-        </form>
-
-        {isAuthenticated ? (
-          <Button
-            className="w-full"
-            onClick={() => {
-              void signOut();
-            }}
-            type="button"
-            variant="outline"
-          >
-            Sign out
-          </Button>
-        ) : null}
-
-        {status ? (
-          <p
-            className={`text-sm ${status.tone === "error" ? "text-destructive" : "text-muted-foreground"}`}
-          >
-            {status.text}
-          </p>
-        ) : null}
-      </section>
-    </main>
+      {status ? (
+        <p
+          className={`text-sm ${status.tone === "error" ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          {status.text}
+        </p>
+      ) : null}
+    </section>
   );
 }

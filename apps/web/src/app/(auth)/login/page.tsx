@@ -70,124 +70,124 @@ export default function LoginPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
-      <section className="w-full max-w-md space-y-6 rounded-xl border border-border/60 bg-card p-8 text-card-foreground shadow-sm">
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight">Login</h1>
-          <p className="text-sm text-muted-foreground">Welcome back.</p>
-        </div>
+    <section className="bg-background/70 border-border/50 text-card-foreground w-full space-y-6 rounded-[calc(var(--radius-2xl)-2px)] border p-8 backdrop-blur-xl">
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold tracking-tight">Login</h1>
+        <p className="text-muted-foreground text-sm">Welcome back.</p>
+      </div>
 
-        <form
-          className="space-y-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void form.handleSubmit();
+      <form
+        className="space-y-5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+      >
+        <form.Field name="email">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  autoComplete="email"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="email"
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  type="email"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
           }}
+        </form.Field>
+
+        <form.Field name="password">
+          {(field) => {
+            const error = field.state.meta.isTouched
+              ? field.state.meta.errors
+                  .map((item) => getErrorMessage(item))
+                  .find(Boolean)
+              : null;
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  autoComplete="current-password"
+                  className="bg-background/55 border-border/60 backdrop-blur-sm"
+                  id="password"
+                  minLength={8}
+                  name={field.name}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => {
+                    field.handleChange(event.target.value);
+                  }}
+                  type="password"
+                  value={field.state.value}
+                />
+                {error ? (
+                  <p className="text-destructive text-xs">{error}</p>
+                ) : null}
+              </div>
+            );
+          }}
+        </form.Field>
+
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
         >
-          <form.Field name="email">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              className="mt-1 w-full"
+              disabled={!canSubmit || isLoading || isAuthenticated}
+              type="submit"
+            >
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Button>
+          )}
+        </form.Subscribe>
 
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    autoComplete="email"
-                    id="email"
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    type="email"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
+        <p className="text-muted-foreground text-center text-sm">
+          New to Pingchat?{" "}
+          <Link className="underline underline-offset-4" href="/register">
+            Create account
+          </Link>
+        </p>
+      </form>
 
-          <form.Field name="password">
-            {(field) => {
-              const error =
-                field.state.meta.isTouched
-                  ? field.state.meta.errors
-                      .map((item) => getErrorMessage(item))
-                      .find(Boolean)
-                  : null;
-              return (
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    autoComplete="current-password"
-                    id="password"
-                    minLength={8}
-                    name={field.name}
-                    onBlur={field.handleBlur}
-                    onChange={(event) => {
-                      field.handleChange(event.target.value);
-                    }}
-                    type="password"
-                    value={field.state.value}
-                  />
-                  {error ? (
-                    <p className="text-xs text-destructive">{error}</p>
-                  ) : null}
-                </div>
-              );
-            }}
-          </form.Field>
+      {isAuthenticated ? (
+        <Button
+          className="w-full"
+          onClick={() => {
+            void signOut();
+          }}
+          type="button"
+          variant="outline"
+        >
+          Sign out
+        </Button>
+      ) : null}
 
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                className="mt-1 w-full"
-                disabled={!canSubmit || isLoading || isAuthenticated}
-                type="submit"
-              >
-                {isSubmitting ? "Logging in..." : "Login"}
-              </Button>
-            )}
-          </form.Subscribe>
-
-          <p className="text-center text-sm text-muted-foreground">
-            New to Pingchat?{" "}
-            <Link className="underline underline-offset-4" href="/register">
-              Create account
-            </Link>
-          </p>
-        </form>
-
-        {isAuthenticated ? (
-          <Button
-            className="w-full"
-            onClick={() => {
-              void signOut();
-            }}
-            type="button"
-            variant="outline"
-          >
-            Sign out
-          </Button>
-        ) : null}
-
-        {status ? (
-          <p
-            className={`text-sm ${status.tone === "error" ? "text-destructive" : "text-muted-foreground"}`}
-          >
-            {status.text}
-          </p>
-        ) : null}
-      </section>
-    </main>
+      {status ? (
+        <p
+          className={`text-sm ${status.tone === "error" ? "text-destructive" : "text-muted-foreground"}`}
+        >
+          {status.text}
+        </p>
+      ) : null}
+    </section>
   );
 }
