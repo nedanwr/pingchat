@@ -12,7 +12,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 
 const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "Email or username is required."),
+  email: z.string().email("Enter a valid email."),
   password: z.string().min(8, "Password must be at least 8 characters.")
 });
 
@@ -41,7 +41,7 @@ export default function LoginPage() {
 
   const form = useForm({
     defaultValues: {
-      identifier: "",
+      email: "",
       password: ""
     },
     validators: {
@@ -56,7 +56,7 @@ export default function LoginPage() {
       try {
         await signIn("password", {
           flow: "signIn",
-          identifier: value.identifier.trim(),
+          email: value.email.trim().toLowerCase(),
           password: value.password
         });
         setStatus({ tone: "success", text: "Logged in." });
@@ -85,7 +85,7 @@ export default function LoginPage() {
             void form.handleSubmit();
           }}
         >
-          <form.Field name="identifier">
+          <form.Field name="email">
             {(field) => {
               const error =
                 field.state.meta.isTouched
@@ -96,16 +96,16 @@ export default function LoginPage() {
 
               return (
                 <div className="space-y-2">
-                  <Label htmlFor="identifier">Email or username</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    autoComplete="username"
-                    id="identifier"
+                    autoComplete="email"
+                    id="email"
                     name={field.name}
                     onBlur={field.handleBlur}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
                     }}
-                    type="text"
+                    type="email"
                     value={field.state.value}
                   />
                   {error ? (
@@ -126,15 +126,7 @@ export default function LoginPage() {
                   : null;
               return (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link
-                      className="text-xs text-muted-foreground underline underline-offset-4"
-                      href="/forgot-password"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <Label htmlFor="password">Password</Label>
                   <Input
                     autoComplete="current-password"
                     id="password"
