@@ -73,9 +73,9 @@ export function ConversationPane({
       </div>
 
       <div className="bg-background/30 p-4 backdrop-blur-xl">
-        <div className="border-border/60 grid h-14 grid-cols-[auto_minmax(0,1fr)_12.75rem] items-center rounded-2xl border bg-linear-to-r from-zinc-500/12 to-black/20 px-3 shadow-sm backdrop-blur-xl dark:from-zinc-400/18 dark:to-black/40">
+        <div className="border-border/60 grid h-14 grid-cols-[auto_minmax(0,1fr)_6.5rem] items-center rounded-2xl border bg-linear-to-r from-zinc-500/12 to-black/20 px-2 shadow-sm backdrop-blur-xl sm:grid-cols-[auto_minmax(0,1fr)_8.5rem] sm:px-3 md:grid-cols-[auto_minmax(0,1fr)_10.5rem] lg:grid-cols-[auto_minmax(0,1fr)_12.75rem] dark:from-zinc-400/18 dark:to-black/40">
           <Button
-            className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-9 rounded-xl"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-8 rounded-xl sm:size-9"
             size="icon"
             type="button"
             variant="ghost"
@@ -84,13 +84,13 @@ export function ConversationPane({
             <span className="sr-only">More actions</span>
           </Button>
           <Input
-            className="text-foreground placeholder:text-muted-foreground/90 h-full w-full min-w-0 border-transparent bg-transparent px-3 text-lg focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+            className="text-foreground placeholder:text-muted-foreground/90 h-full w-full min-w-0 border-transparent bg-transparent px-2 text-base focus-visible:border-transparent focus-visible:ring-0 sm:px-3 sm:text-lg dark:bg-transparent"
             id="composer"
             placeholder={composerPlaceholder}
           />
           <div className="flex items-center justify-end gap-1 pl-2">
             <Button
-              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-9 rounded-xl"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-8 rounded-xl sm:size-9"
               size="icon"
               type="button"
               variant="ghost"
@@ -99,7 +99,7 @@ export function ConversationPane({
               <span className="sr-only">Gift</span>
             </Button>
             <Button
-              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 h-9 rounded-xl px-2.5 text-xs font-semibold tracking-wide"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 h-8 rounded-xl px-2 text-[10px] font-semibold tracking-wide sm:h-9 sm:px-2.5 sm:text-xs"
               size="sm"
               type="button"
               variant="ghost"
@@ -108,7 +108,7 @@ export function ConversationPane({
               <span className="sr-only">Open GIF picker</span>
             </Button>
             <Button
-              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-9 rounded-xl"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 hidden size-9 rounded-xl sm:inline-flex"
               size="icon"
               type="button"
               variant="ghost"
@@ -117,7 +117,7 @@ export function ConversationPane({
               <span className="sr-only">Stickers</span>
             </Button>
             <Button
-              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-9 rounded-xl"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 hidden size-9 rounded-xl md:inline-flex"
               size="icon"
               type="button"
               variant="ghost"
@@ -126,7 +126,7 @@ export function ConversationPane({
               <span className="sr-only">Emoji</span>
             </Button>
             <Button
-              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-9 rounded-xl"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/70 hidden size-9 rounded-xl lg:inline-flex"
               size="icon"
               type="button"
               variant="ghost"

@@ -15,7 +15,7 @@ interface ServerRailProps {
 
 export function ServerRail({ servers }: ServerRailProps) {
   return (
-    <aside className="border-border/50 bg-background/35 flex w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl sm:w-[4.68rem] sm:p-3">
+    <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
       {servers.map((server) => (
         <button
           key={server.id}

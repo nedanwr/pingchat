@@ -32,7 +32,7 @@ export function DirectMessagesPane({
   currentUser
 }: DirectMessagesPaneProps) {
   return (
-    <aside className="border-border/50 bg-background/30 w-[9.91rem] shrink-0 border-r p-3 backdrop-blur-xl sm:w-[13.22rem] sm:p-4 lg:w-[14.87rem]">
+    <aside className="border-border/50 bg-background/30 hidden w-[9.91rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[13.22rem] md:p-4 lg:w-[14.87rem]">
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="mb-4">
           <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
