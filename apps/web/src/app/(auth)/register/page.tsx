@@ -11,13 +11,24 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 
+const usernamePattern = /^[a-z0-9._-]+$/;
+
+const usernameSchema = z
+  .string()
+  .trim()
+  .transform((value) => value.toLowerCase().replace(/^@+/, ""))
+  .refine((value) => value.length >= 3 && value.length <= 32, {
+    message: "Username must be 3-32 characters."
+  })
+  .refine((value) => usernamePattern.test(value), {
+    message:
+      "Username may only include letters, numbers, underscores, hyphens, and periods."
+  });
+
 const registerSchema = z.object({
   displayName: z.string().trim().max(80, "Display name is too long."),
   email: z.string().email("Enter a valid email."),
-  username: z
-    .string()
-    .trim()
-    .min(3, "Username must be at least 3 characters."),
+  username: usernameSchema,
   password: z.string().min(8, "Password must be at least 8 characters.")
 });
 
@@ -60,11 +71,12 @@ export default function RegisterPage() {
       }
       setStatus(null);
       try {
+        const normalizedUsername = usernameSchema.parse(value.username);
         await signIn("password", {
           flow: "signUp",
           displayName: value.displayName.trim(),
           email: value.email.trim().toLowerCase(),
-          username: value.username.trim(),
+          username: normalizedUsername,
           password: value.password
         });
         setStatus({ tone: "success", text: "Account created." });
