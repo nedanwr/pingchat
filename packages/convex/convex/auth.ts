@@ -58,9 +58,12 @@ function getTrimmedOptionalString(value: Value | undefined) {
 
 function normalizeUsername(username: string) {
   const normalized = username.toLowerCase().replace(/^@+/, "");
-  if (!/^[a-z0-9_]{3,32}$/.test(normalized)) {
+  if (!normalized) {
+    throw new Error("Username is required");
+  }
+  if (!/^[a-z0-9._-]+$/.test(normalized)) {
     throw new Error(
-      "Username must be 3-32 characters and only include letters, numbers, and underscores"
+      "Username may only include letters, numbers, underscores, hyphens, and periods"
     );
   }
   return normalized;
