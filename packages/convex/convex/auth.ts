@@ -2,10 +2,19 @@ import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { type Value } from "convex/values";
 
+type PasswordProfile = {
+  email: string;
+  username?: string;
+  displayName?: string;
+  name?: string;
+  imageUrl?: string;
+  image?: string;
+};
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
-      profile: (params) => {
+      profile: (params): PasswordProfile => {
         const flow = params.flow;
         const email = getTrimmedString(params.email).toLowerCase();
         if (!email) {
