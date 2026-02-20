@@ -5,7 +5,7 @@ import { type Value } from "convex/values";
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
-      profile: async (params, ctx) => {
+      profile: (params) => {
         const flow = params.flow;
         const email = getTrimmedString(params.email).toLowerCase();
         if (!email) {
@@ -32,15 +32,6 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         const username = normalizeUsername(getTrimmedString(params.username));
         if (!username) {
           throw new Error("Username is required");
-        }
-
-        const existingUserWithUsername = await ctx.db
-          .query("users")
-          .withIndex("username", (q) => q.eq("username", username))
-          .unique();
-
-        if (existingUserWithUsername) {
-          throw new Error("Username is already taken");
         }
 
         return {
