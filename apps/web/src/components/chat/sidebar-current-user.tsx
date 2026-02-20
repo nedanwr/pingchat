@@ -1,4 +1,7 @@
+import { Settings } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export interface SidebarCurrentUser {
@@ -28,22 +31,29 @@ export function SidebarCurrentUserCard({
   const avatarSeed = user.avatarSeed ?? user.name;
 
   return (
-    <div className="border-border/50 -mx-3 border-t px-3 pt-5 sm:-mx-4 sm:px-4">
-      <div className={cn("flex items-center gap-2 p-2", className)}>
-        <Avatar className="border-border/60 bg-background/40 size-8 shrink-0 border">
-          <AvatarImage
-            alt={`${user.name} profile picture`}
-            src={avatarSrc(avatarSeed)}
-          />
-          <AvatarFallback>{avatarFallback(avatarSeed)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{user.name}</p>
-          <p className="text-muted-foreground truncate text-xs">
-            {user.handle}
-            {user.status ? ` · ${user.status}` : ""}
-          </p>
+    <div className="border-border/50 -mx-3 mt-4 border-t px-3 pt-5 sm:-mx-4 sm:px-4">
+      <div
+        className={cn("flex items-center justify-between gap-2 p-2", className)}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar className="border-border/60 bg-background/40 size-8 shrink-0 border">
+            <AvatarImage
+              alt={`${user.name} profile picture`}
+              src={avatarSrc(avatarSeed)}
+            />
+            <AvatarFallback>{avatarFallback(avatarSeed)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="text-muted-foreground truncate text-xs">
+              {user.handle}
+            </p>
+          </div>
         </div>
+        <Button size="icon-sm" type="button" variant="ghost">
+          <Settings className="size-4.5" />
+          <span className="sr-only">Open settings</span>
+        </Button>
       </div>
     </div>
   );
