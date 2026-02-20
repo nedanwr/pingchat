@@ -10,6 +10,7 @@ type ConversationMessage = {
   sender: string;
   time: string;
   content: string;
+  avatarUrl: string;
 };
 
 interface ConversationPaneProps {
@@ -18,10 +19,6 @@ interface ConversationPaneProps {
   headerAction?: ReactNode;
   messages: readonly ConversationMessage[];
   composerPlaceholder: string;
-}
-
-function avatarSrc(seed: string) {
-  return `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
 }
 
 function avatarFallback(seed: string) {
@@ -55,7 +52,7 @@ export function ConversationPane({
             <Avatar className="border-border/60 bg-background/40 size-10 shrink-0 border">
               <AvatarImage
                 alt={`${message.sender} profile picture`}
-                src={avatarSrc(message.sender)}
+                src={message.avatarUrl}
               />
               <AvatarFallback>{avatarFallback(message.sender)}</AvatarFallback>
             </Avatar>
