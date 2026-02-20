@@ -32,7 +32,7 @@ export function DirectMessagesPane({
   currentUser
 }: DirectMessagesPaneProps) {
   return (
-    <aside className="border-border/50 bg-background/30 w-[10.8rem] shrink-0 border-r p-3 backdrop-blur-xl sm:w-[14.4rem] sm:p-4 lg:w-[16.2rem]">
+    <aside className="border-border/50 bg-background/30 w-[9.91rem] shrink-0 border-r p-3 backdrop-blur-xl sm:w-[13.22rem] sm:p-4 lg:w-[14.87rem]">
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="mb-4">
           <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
@@ -41,7 +41,7 @@ export function DirectMessagesPane({
         </div>
 
         <Input
-          className="border-border/50 bg-background/45 mb-4 backdrop-blur-sm"
+          className="border-border/50 bg-background/45 mb-4 h-8 text-xs backdrop-blur-sm"
           placeholder="Search conversations"
         />
 
