@@ -1,9 +1,6 @@
 import { Hash } from "lucide-react";
 
-import {
-  SidebarCurrentUserCard,
-  type SidebarCurrentUser
-} from "~/components/chat/sidebar-current-user";
+import { SidebarCurrentUserCard } from "~/components/chat/sidebar-current-user";
 
 export interface ChannelSummary {
   id: string;
@@ -14,13 +11,11 @@ export interface ChannelSummary {
 interface ChannelListPaneProps {
   serverName: string;
   channels: readonly ChannelSummary[];
-  currentUser: SidebarCurrentUser;
 }
 
 export function ChannelListPane({
   serverName,
-  channels,
-  currentUser
+  channels
 }: ChannelListPaneProps) {
   return (
     <aside className="border-border/50 bg-background/30 hidden w-[10.8rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[14.4rem] md:p-4 lg:w-[16.2rem]">
@@ -49,7 +44,7 @@ export function ChannelListPane({
         </div>
 
         <div className="absolute right-0 bottom-0 left-0">
-          <SidebarCurrentUserCard user={currentUser} />
+          <SidebarCurrentUserCard />
         </div>
       </div>
     </aside>
