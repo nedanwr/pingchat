@@ -1,36 +1,25 @@
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Input } from "~/components/ui/input";
 
-import {
-  SidebarCurrentUserCard,
-  type SidebarCurrentUser
-} from "~/components/chat/sidebar-current-user";
+import { SidebarCurrentUserCard } from "~/components/chat/sidebar-current-user";
 
 export interface DirectMessageSummary {
   id: string;
   name: string;
   unread: number;
   active: boolean;
-  avatarSeed?: string;
+  avatarUrl: string;
 }
 
 interface DirectMessagesPaneProps {
   conversations: readonly DirectMessageSummary[];
-  currentUser: SidebarCurrentUser;
-}
-
-function avatarSrc(seed: string) {
-  return `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(seed)}`;
 }
 
 function avatarFallback(seed: string) {
   return seed.trim().charAt(0).toUpperCase() || "?";
 }
 
-export function DirectMessagesPane({
-  conversations,
-  currentUser
-}: DirectMessagesPaneProps) {
+export function DirectMessagesPane({ conversations }: DirectMessagesPaneProps) {
   return (
     <aside className="border-border/50 bg-background/30 hidden w-[9.91rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[13.22rem] md:p-4 lg:w-[14.87rem]">
       <div className="relative flex h-full min-h-0 flex-col">
@@ -47,8 +36,6 @@ export function DirectMessagesPane({
 
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pb-28">
           {conversations.map((dm) => {
-            const avatarSeed = dm.avatarSeed ?? dm.name;
-
             return (
               <button
                 key={dm.id}
@@ -63,11 +50,9 @@ export function DirectMessagesPane({
                   <Avatar className="border-border/60 bg-background/40 size-7 shrink-0 border">
                     <AvatarImage
                       alt={`${dm.name} profile picture`}
-                      src={avatarSrc(avatarSeed)}
+                      src={dm.avatarUrl}
                     />
-                    <AvatarFallback>
-                      {avatarFallback(avatarSeed)}
-                    </AvatarFallback>
+                    <AvatarFallback>{avatarFallback(dm.name)}</AvatarFallback>
                   </Avatar>
                   <p className="truncate text-sm font-medium">{dm.name}</p>
                 </div>
@@ -82,7 +67,7 @@ export function DirectMessagesPane({
         </div>
 
         <div className="absolute right-0 bottom-0 left-0">
-          <SidebarCurrentUserCard user={currentUser} />
+          <SidebarCurrentUserCard />
         </div>
       </div>
     </aside>
