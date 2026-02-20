@@ -33,7 +33,7 @@ export function DirectMessagesPane({
 }: DirectMessagesPaneProps) {
   return (
     <aside className="border-border/50 bg-background/30 w-[10.8rem] shrink-0 border-r p-3 backdrop-blur-xl sm:w-[14.4rem] sm:p-4 lg:w-[16.2rem]">
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="relative flex h-full min-h-0 flex-col">
         <div className="mb-4">
           <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
             Direct Messages
@@ -45,7 +45,7 @@ export function DirectMessagesPane({
           placeholder="Search conversations"
         />
 
-        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pb-28">
           {conversations.map((dm) => {
             const avatarSeed = dm.avatarSeed ?? dm.name;
 
@@ -81,7 +81,9 @@ export function DirectMessagesPane({
           })}
         </div>
 
-        <SidebarCurrentUserCard user={currentUser} />
+        <div className="absolute right-0 bottom-0 left-0">
+          <SidebarCurrentUserCard user={currentUser} />
+        </div>
       </div>
     </aside>
   );
