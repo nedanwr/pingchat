@@ -1,5 +1,10 @@
 import { Geist } from "next/font/google";
-import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import {
+  ConvexAuthNextjsServerProvider,
+  convexAuthNextjsToken
+} from "@convex-dev/auth/nextjs/server";
+import { api } from "@pingchat/convex/convex/_generated/api";
+import { preloadQuery } from "convex/nextjs";
 
 import { ConvexClientProvider } from "~/integrations/convex/provider";
 import { CurrentUserProvider } from "~/integrations/convex/current-user-provider";
@@ -14,6 +19,11 @@ const geist = Geist({
 export default async function RootLayout({
   children
 }: Readonly<{ children: React.ReactNode }>) {
+  const token = await convexAuthNextjsToken();
+  const preloadedCurrentUser = token
+    ? await preloadQuery(api.users.getCurrentUser, {}, { token })
+    : await preloadQuery(api.users.getCurrentUser);
+
   return (
     <ConvexAuthNextjsServerProvider>
       <ConvexClientProvider>
@@ -23,7 +33,7 @@ export default async function RootLayout({
           suppressHydrationWarning
         >
           <body>
-            <CurrentUserProvider>
+            <CurrentUserProvider preloadedCurrentUser={preloadedCurrentUser}>
               <ThemeProvider>{children}</ThemeProvider>
             </CurrentUserProvider>
           </body>
