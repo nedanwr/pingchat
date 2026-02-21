@@ -11,8 +11,30 @@ interface SidebarCurrentUserProps {
   className?: string;
 }
 
+type SidebarStatus = "online" | "idle" | "dnd" | "invisible" | "offline";
+
 function avatarFallback(seed: string) {
   return seed.trim().charAt(0).toUpperCase() || "?";
+}
+
+function statusColorClass(status: SidebarStatus) {
+  if (status === "online") {
+    return "bg-emerald-500";
+  }
+  if (status === "idle") {
+    return "bg-amber-500";
+  }
+  if (status === "dnd") {
+    return "bg-rose-500";
+  }
+  return "bg-zinc-500";
+}
+
+function formatStatusLabel(status: SidebarStatus) {
+  if (status === "dnd") {
+    return "Do Not Disturb";
+  }
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 export function SidebarCurrentUserCard({ className }: SidebarCurrentUserProps) {
@@ -20,9 +42,12 @@ export function SidebarCurrentUserCard({ className }: SidebarCurrentUserProps) {
 
   const fallbackUser = {
     name: "You",
-    handle: "@you"
+    handle: "@you",
+    status: "offline" as const
   };
   const resolvedUser = user ?? fallbackUser;
+  const status = resolvedUser.status;
+  const statusLabel = formatStatusLabel(status);
 
   return (
     <div className="border-border/50 -mx-3 mt-[0.4375rem] border-t px-2 pt-[0.4375rem] sm:-mx-4 sm:px-3">
@@ -33,15 +58,25 @@ export function SidebarCurrentUserCard({ className }: SidebarCurrentUserProps) {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
-          <Avatar className="border-border/60 bg-background/40 size-8 shrink-0 border">
-            {user ? (
-              <AvatarImage
-                alt={`${resolvedUser.name} profile picture`}
-                src={user.avatarUrl}
-              />
-            ) : null}
-            <AvatarFallback>{avatarFallback(resolvedUser.name)}</AvatarFallback>
-          </Avatar>
+          <div className="relative shrink-0">
+            <Avatar className="border-border/60 bg-background/40 size-8 border">
+              {user ? (
+                <AvatarImage
+                  alt={`${resolvedUser.name} profile picture`}
+                  src={user.avatarUrl}
+                />
+              ) : null}
+              <AvatarFallback>{avatarFallback(resolvedUser.name)}</AvatarFallback>
+            </Avatar>
+            <span
+              aria-label={`Status: ${statusLabel}`}
+              className={cn(
+                "absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-[hsl(var(--background))]",
+                statusColorClass(status)
+              )}
+              role="status"
+            />
+          </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{resolvedUser.name}</p>
             <p className="text-muted-foreground truncate text-xs">
