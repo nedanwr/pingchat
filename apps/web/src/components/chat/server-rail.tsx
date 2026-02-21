@@ -51,6 +51,9 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   const setLastAccessedChannel = useLastAccessedChannelStore(
     (state) => state.setLastAccessedChannel
   );
+  const seedLastAccessedChannels = useLastAccessedChannelStore(
+    (state) => state.seedLastAccessedChannels
+  );
 
   const serverItems: ServerItem[] = servers.map((server) => ({
     id: server._id,
@@ -72,6 +75,22 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
     },
     [router]
   );
+
+  useEffect(() => {
+    const defaultChannelsByGuildId = Object.fromEntries(
+      servers.flatMap((server) =>
+        server.defaultChannelId
+          ? [[server._id, server.defaultChannelId] as const]
+          : []
+      )
+    );
+
+    if (Object.keys(defaultChannelsByGuildId).length === 0) {
+      return;
+    }
+
+    seedLastAccessedChannels(defaultChannelsByGuildId);
+  }, [seedLastAccessedChannels, servers]);
 
   useEffect(() => {
     const routesToPrefetch = [
@@ -277,7 +296,7 @@ function getActiveGuildIdFromPath(pathname: string) {
 
 function runWhenIdle(callback: () => void) {
   if (typeof globalThis.window === "undefined") {
-    return () => {};
+    return () => undefined;
   }
 
   const idleCallbacks = globalThis as typeof globalThis & {
