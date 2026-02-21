@@ -11,11 +11,13 @@ export interface ChannelSummary {
 interface ChannelListPaneProps {
   serverName: string;
   channels: readonly ChannelSummary[];
+  onSelectChannel?: (channelId: string) => void;
 }
 
 export function ChannelListPane({
   serverName,
-  channels
+  channels,
+  onSelectChannel
 }: ChannelListPaneProps) {
   return (
     <aside className="border-border/50 bg-background/30 hidden w-[10.8rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[14.4rem] md:p-4 lg:w-[16.2rem]">
@@ -35,6 +37,9 @@ export function ChannelListPane({
                   ? "bg-accent/80 text-accent-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground"
               }`}
+              onClick={() => {
+                onSelectChannel?.(channel.id);
+              }}
               type="button"
             >
               <Hash className="size-4" />
