@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@pingchat/convex/convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import type { Preloaded } from "convex/react";
+import { useMutation, usePreloadedQuery } from "convex/react";
 import { Plus, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,14 +29,18 @@ type ServerItem = {
   active: boolean;
 };
 
-export function ServerRail() {
+type ServerRailProps = {
+  preloadedServers: Preloaded<typeof api.servers.listServers>;
+};
+
+export function ServerRail({ preloadedServers }: ServerRailProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const servers = useQuery(api.servers.listServers) ?? [];
+  const servers = usePreloadedQuery(preloadedServers);
   const createServer = useMutation(api.servers.createServer);
   const activeServerId = getActiveGuildIdFromPath(pathname);
 
