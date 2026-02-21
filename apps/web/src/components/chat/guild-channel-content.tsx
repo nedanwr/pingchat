@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChannelListPane } from "~/components/chat/channel-list-pane";
 import { ConversationPane } from "~/components/chat/conversation-pane";
 import { useCurrentSidebarUser } from "~/integrations/convex/current-user-provider";
+import { useLastAccessedChannelStore } from "~/stores/last-accessed-channel-store";
 
 const INITIAL_MESSAGES_PAGE_SIZE = 50;
 
@@ -42,6 +43,9 @@ export function GuildChannelContent({
   const currentUserAvatarUrl = currentUser?.avatarUrl ?? "";
   const currentUserId = currentUser?.id as Id<"users"> | undefined;
   const prefetchedRoutesRef = useRef(new Set<string>());
+  const setLastAccessedChannel = useLastAccessedChannelStore(
+    (state) => state.setLastAccessedChannel
+  );
 
   const createMessage = useMutation(
     api.messages.createMessage
@@ -86,13 +90,28 @@ export function GuildChannelContent({
   const defaultTextChannel = textChannels[0] ?? null;
   const activeChannel =
     textChannels.find((channel) => channel._id === channelId) ?? null;
+  const activeChannelId = activeChannel?._id ?? null;
 
   useEffect(() => {
-    if (!defaultTextChannel || activeChannel) {
+    if (!defaultTextChannel || activeChannelId) {
       return;
     }
+    setLastAccessedChannel(guildId, defaultTextChannel._id);
     router.replace(`/${guildId}/channels/${defaultTextChannel._id}`);
-  }, [activeChannel, defaultTextChannel, guildId, router]);
+  }, [
+    activeChannelId,
+    defaultTextChannel,
+    guildId,
+    router,
+    setLastAccessedChannel
+  ]);
+
+  useEffect(() => {
+    if (!activeChannelId) {
+      return;
+    }
+    setLastAccessedChannel(guildId, activeChannelId);
+  }, [activeChannelId, guildId, setLastAccessedChannel]);
 
   useEffect(() => {
     setSendError(null);
@@ -127,6 +146,7 @@ export function GuildChannelContent({
         channels={channelSummaries}
         onPrefetchChannel={prefetchChannelRoute}
         onSelectChannel={(nextChannelId) => {
+          setLastAccessedChannel(guildId, nextChannelId);
           router.push(`/${guildId}/channels/${nextChannelId}`);
         }}
         serverName={server.name}
