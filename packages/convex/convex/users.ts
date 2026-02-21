@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 import { query } from "./_generated/server";
+import { buildDefaultAvatarUrl } from "./avatar";
 
 export const getCurrentUser = query({
   args: {},
@@ -15,10 +16,9 @@ export const getCurrentUser = query({
       return null;
     }
 
-    const avatarUrl = user.avatarUrl;
-    if (!avatarUrl) {
-      throw new Error("User is missing avatarUrl");
-    }
+    const avatarUrl =
+      user.avatarUrl ??
+      buildDefaultAvatarUrl(user.username ?? user.email ?? String(user._id));
 
     return {
       id: user._id,
