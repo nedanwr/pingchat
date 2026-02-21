@@ -1,4 +1,5 @@
 import { ChevronDown, Hash } from "lucide-react";
+import { useMemo } from "react";
 
 import { SidebarCurrentUserCard } from "~/components/chat/sidebar-current-user";
 
@@ -14,20 +15,56 @@ interface ChannelListPaneProps {
   serverName: string;
   channels: readonly ChannelSummary[];
   onSelectChannel?: (channelId: string) => void;
+  onPrefetchChannel?: (channelId: string) => void;
 }
 
 export function ChannelListPane({
   serverName,
   channels,
-  onSelectChannel
+  onSelectChannel,
+  onPrefetchChannel
 }: ChannelListPaneProps) {
-  const categories = channels.filter((channel) => channel.type === 0);
-  const textChannels = channels.filter((channel) => channel.type === 1);
-  const categoryIds = new Set(categories.map((category) => category.id));
-  const uncategorizedTextChannels = textChannels.filter(
-    (channel) =>
-      !channel.parentId || !categoryIds.has(channel.parentId)
-  );
+  const { categories, childTextChannelsByCategoryId, uncategorizedTextChannels } =
+    useMemo(() => {
+      const nextCategories: ChannelSummary[] = [];
+      const categoryIds = new Set<string>();
+      const textChannelsByCategoryId = new Map<string, ChannelSummary[]>();
+      const textChannelsWithoutCategory: ChannelSummary[] = [];
+
+      for (const channel of channels) {
+        if (channel.type === 0) {
+          nextCategories.push(channel);
+          categoryIds.add(channel.id);
+          continue;
+        }
+
+        if (channel.type !== 1) {
+          continue;
+        }
+
+        if (!channel.parentId) {
+          textChannelsWithoutCategory.push(channel);
+          continue;
+        }
+
+        const groupedChannels =
+          textChannelsByCategoryId.get(channel.parentId) ?? [];
+        groupedChannels.push(channel);
+        textChannelsByCategoryId.set(channel.parentId, groupedChannels);
+      }
+
+      const uncategorized = textChannelsWithoutCategory.concat(
+        Array.from(textChannelsByCategoryId.entries())
+          .filter(([categoryId]) => !categoryIds.has(categoryId))
+          .flatMap(([, groupedChannels]) => groupedChannels)
+      );
+
+      return {
+        categories: nextCategories,
+        childTextChannelsByCategoryId: textChannelsByCategoryId,
+        uncategorizedTextChannels: uncategorized
+      };
+    }, [channels]);
 
   const renderTextChannel = (channel: ChannelSummary) => (
     <button
@@ -39,6 +76,12 @@ export function ChannelListPane({
       }`}
       onClick={() => {
         onSelectChannel?.(channel.id);
+      }}
+      onFocus={() => {
+        onPrefetchChannel?.(channel.id);
+      }}
+      onMouseEnter={() => {
+        onPrefetchChannel?.(channel.id);
       }}
       type="button"
     >
@@ -59,9 +102,8 @@ export function ChannelListPane({
 
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pt-3 pb-28">
           {categories.map((category) => {
-            const childChannels = textChannels.filter(
-              (channel) => channel.parentId === category.id
-            );
+            const childChannels =
+              childTextChannelsByCategoryId.get(category.id) ?? [];
 
             return (
               <div key={category.id} className="space-y-1">
