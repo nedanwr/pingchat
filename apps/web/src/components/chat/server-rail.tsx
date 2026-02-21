@@ -4,7 +4,7 @@ import { api } from "@pingchat/convex/convex/_generated/api";
 import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
 import { Plus, Users } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
@@ -20,6 +20,7 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useAppNavigation } from "~/lib/use-app-navigation";
 import { useLastAccessedChannelStore } from "~/stores/last-accessed-channel-store";
 
 type ServerItem = {
@@ -40,7 +41,7 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
+  const router = useAppNavigation();
   const servers = usePreloadedQuery(preloadedServers);
   const createServer = useMutation(api.servers.createServer);
   const activeServerId = getActiveGuildIdFromPath(pathname);
@@ -71,7 +72,7 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
         return;
       }
       prefetchedRoutesRef.current.add(route);
-      router.prefetch(route);
+      void router.prefetch(route);
     },
     [router]
   );

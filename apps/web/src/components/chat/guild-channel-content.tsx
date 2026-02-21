@@ -4,12 +4,12 @@ import { api } from "@pingchat/convex/convex/_generated/api";
 import type { Id } from "@pingchat/convex/convex/_generated/dataModel";
 import type { Preloaded } from "convex/react";
 import { useConvex, useMutation, usePreloadedQuery } from "convex/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ChannelListPane } from "~/components/chat/channel-list-pane";
 import { ConversationPane } from "~/components/chat/conversation-pane";
 import { useCurrentSidebarUser } from "~/integrations/convex/current-user-provider";
+import { useAppNavigation } from "~/lib/use-app-navigation";
 import { useLastAccessedChannelStore } from "~/stores/last-accessed-channel-store";
 
 const INITIAL_MESSAGES_PAGE_SIZE = 50;
@@ -35,7 +35,7 @@ export function GuildChannelContent({
   preloadedMessages
 }: GuildChannelContentProps) {
   const [sendError, setSendError] = useState<string | null>(null);
-  const router = useRouter();
+  const router = useAppNavigation();
   const server = usePreloadedQuery(preloadedServer);
   const channels = usePreloadedQuery(preloadedChannels);
   const { user: currentUser } = useCurrentSidebarUser();
@@ -137,7 +137,7 @@ export function GuildChannelContent({
       return;
     }
     prefetchedRoutesRef.current.add(route);
-    router.prefetch(route);
+    void router.prefetch(route);
   };
 
   return (

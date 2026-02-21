@@ -9,6 +9,7 @@ import { preloadQuery } from "convex/nextjs";
 import { ConvexClientProvider } from "~/integrations/convex/provider";
 import { CurrentUserProvider } from "~/integrations/convex/current-user-provider";
 import { ThemeProvider } from "~/integrations/theme/provider";
+import { GlobalNavigationProgress } from "~/components/navigation/global-navigation-progress";
 import "~/styles/globals.css";
 
 const geist = Geist({
@@ -34,7 +35,10 @@ export default async function RootLayout({
         >
           <body>
             <CurrentUserProvider preloadedCurrentUser={preloadedCurrentUser}>
-              <ThemeProvider>{children}</ThemeProvider>
+              <ThemeProvider>
+                <GlobalNavigationProgress />
+                {children}
+              </ThemeProvider>
             </CurrentUserProvider>
           </body>
         </html>
