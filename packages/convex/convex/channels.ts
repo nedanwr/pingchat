@@ -29,7 +29,7 @@ export const createChannel = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    await requireServerMember(ctx, args.serverId, userId);
+    const server = await requireServerMember(ctx, args.serverId, userId);
     await assertValidParentChannel(ctx, args.serverId, args.parentId);
 
     const channelId = await ctx.db.insert("channels", {
@@ -40,6 +40,12 @@ export const createChannel = mutation({
       ...(args.topic !== undefined ? { topic: args.topic } : {}),
       ...(args.parentId !== undefined ? { parentId: args.parentId } : {})
     });
+
+    if (args.type === 1 && (server.defaultChannelId ?? null) === null) {
+      await ctx.db.patch(args.serverId, {
+        defaultChannelId: channelId
+      });
+    }
 
     return await ctx.db.get(channelId);
   }
@@ -56,7 +62,7 @@ export const getChannel = query({
       throw new Error("Channel not found");
     }
 
-    await requireServerMember(ctx, channel.serverId, userId);
+    const server = await requireServerMember(ctx, channel.serverId, userId);
     return channel;
   }
 });
@@ -96,7 +102,7 @@ export const updateChannel = mutation({
       throw new Error("Channel not found");
     }
 
-    await requireServerMember(ctx, channel.serverId, userId);
+    const server = await requireServerMember(ctx, channel.serverId, userId);
 
     if (
       args.name === undefined &&
@@ -121,8 +127,33 @@ export const updateChannel = mutation({
       ...(args.topic !== undefined ? { topic: args.topic } : {}),
       ...(args.parentId !== undefined ? { parentId: args.parentId } : {})
     });
+    const updatedChannel = await ctx.db.get(args.channelId);
+    if (!updatedChannel) {
+      throw new Error("Channel not found");
+    }
 
-    return await ctx.db.get(args.channelId);
+    const defaultChannelId = server.defaultChannelId ?? null;
+    if (defaultChannelId === null && updatedChannel.type === 1) {
+      await ctx.db.patch(channel.serverId, {
+        defaultChannelId: updatedChannel._id
+      });
+    } else if (
+      defaultChannelId === updatedChannel._id &&
+      updatedChannel.type !== 1
+    ) {
+      const replacementTextChannel = await ctx.db
+        .query("channels")
+        .withIndex("serverId_type_position", (q) =>
+          q.eq("serverId", channel.serverId).eq("type", 1)
+        )
+        .first();
+
+      await ctx.db.patch(channel.serverId, {
+        defaultChannelId: replacementTextChannel?._id ?? null
+      });
+    }
+
+    return updatedChannel;
   }
 });
 
@@ -137,8 +168,21 @@ export const deleteChannel = mutation({
       throw new Error("Channel not found");
     }
 
-    await requireServerMember(ctx, channel.serverId, userId);
+    const server = await requireServerMember(ctx, channel.serverId, userId);
     await ctx.db.delete(args.channelId);
+
+    if ((server.defaultChannelId ?? null) === args.channelId) {
+      const replacementTextChannel = await ctx.db
+        .query("channels")
+        .withIndex("serverId_type_position", (q) =>
+          q.eq("serverId", channel.serverId).eq("type", 1)
+        )
+        .first();
+
+      await ctx.db.patch(channel.serverId, {
+        defaultChannelId: replacementTextChannel?._id ?? null
+      });
+    }
 
     return { success: true };
   }
