@@ -1,45 +1,42 @@
 "use client";
 
 import { api } from "@pingchat/convex/convex/_generated/api";
-import { useQuery } from "convex/react";
+import type { Preloaded } from "convex/react";
+import { usePreloadedQuery } from "convex/react";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 type SidebarUser = {
   name: string;
   handle: string;
-  avatarSeed: string;
-  imageUrl: string | null;
+  avatarUrl: string;
 };
 
 type CurrentUserContextValue = {
   user: SidebarUser | null;
-  isLoading: boolean;
 };
 
 const CurrentUserContext = createContext<CurrentUserContextValue | undefined>(
   undefined
 );
-const NO_ARGS: Record<string, never> = {};
+type CurrentUserProviderProps = {
+  children: ReactNode;
+  preloadedCurrentUser: Preloaded<typeof api.users.getCurrentUser>;
+};
 
 function toHandle(value: string) {
   return `@${value.toLowerCase().replace(/^@+/, "")}`;
 }
 
-export function CurrentUserProvider({ children }: { children: ReactNode }) {
-  const currentUser = useQuery(api.users.getCurrentUser, NO_ARGS);
+export function CurrentUserProvider({
+  children,
+  preloadedCurrentUser
+}: CurrentUserProviderProps) {
+  const currentUser = usePreloadedQuery(preloadedCurrentUser);
 
   const value = useMemo<CurrentUserContextValue>(() => {
-    if (currentUser === undefined) {
-      return {
-        user: null,
-        isLoading: true
-      };
-    }
-
     if (currentUser === null) {
       return {
-        user: null,
-        isLoading: false
+        user: null
       };
     }
 
@@ -57,10 +54,8 @@ export function CurrentUserProvider({ children }: { children: ReactNode }) {
       user: {
         name,
         handle,
-        avatarSeed: currentUser.username ?? currentUser.email ?? name,
-        imageUrl: currentUser.imageUrl
-      },
-      isLoading: false
+        avatarUrl: currentUser.avatarUrl
+      }
     };
   }, [currentUser]);
 
