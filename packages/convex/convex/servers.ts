@@ -1,8 +1,13 @@
 import { v } from "convex/values";
 
-import type { Id } from "./_generated/dataModel";
-import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
+import {
+  addServerMember,
+  requireServer,
+  requireServerMember,
+  requireServerOwner
+} from "./serverMembers";
 
 export const createServer = mutation({
   args: {
@@ -22,7 +27,22 @@ export const createServer = mutation({
       ...(args.iconUrl !== undefined ? { iconUrl: args.iconUrl } : {})
     });
 
-    return await ctx.db.get(serverId);
+    await addServerMember(ctx, serverId, userId);
+
+    return await requireServer(ctx, serverId);
+  }
+});
+
+export const joinServer = mutation({
+  args: {
+    serverId: v.id("servers")
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuthenticatedUserId(ctx);
+    const server = await requireServer(ctx, args.serverId);
+    const { joinedNow } = await addServerMember(ctx, args.serverId, userId);
+
+    return { server, joinedNow };
   }
 });
 
@@ -32,7 +52,7 @@ export const getServer = query({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    return await requireOwnedServer(ctx, args.serverId, userId);
+    return await requireServerMember(ctx, args.serverId, userId);
   }
 });
 
@@ -45,7 +65,7 @@ export const updateServer = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    await requireOwnedServer(ctx, args.serverId, userId);
+    await requireServerOwner(ctx, args.serverId, userId);
 
     if (
       args.name === undefined &&
@@ -72,7 +92,7 @@ export const deleteServer = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    await requireOwnedServer(ctx, args.serverId, userId);
+    await requireServerOwner(ctx, args.serverId, userId);
 
     const channels = await ctx.db
       .query("channels")
@@ -83,23 +103,17 @@ export const deleteServer = mutation({
       await ctx.db.delete(channel._id);
     }
 
+    const memberships = await ctx.db
+      .query("serverMembers")
+      .withIndex("serverId", (q) => q.eq("serverId", args.serverId))
+      .collect();
+
+    for (const membership of memberships) {
+      await ctx.db.delete(membership._id);
+    }
+
     await ctx.db.delete(args.serverId);
 
     return { success: true };
   }
 });
-
-async function requireOwnedServer(
-  ctx: QueryCtx | MutationCtx,
-  serverId: Id<"servers">,
-  userId: Id<"users">
-) {
-  const server = await ctx.db.get(serverId);
-  if (!server) {
-    throw new Error("Server not found");
-  }
-  if (server.ownerId !== userId) {
-    throw new Error("Not authorized to access this server");
-  }
-  return server;
-}
