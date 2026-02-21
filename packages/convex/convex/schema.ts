@@ -13,7 +13,7 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     displayName: v.optional(v.string()),
     username: v.optional(v.string()),
-    imageUrl: v.optional(v.string())
+    avatarUrl: v.optional(v.string())
   })
     .index("email", ["email"])
     .index("phone", ["phone"])
