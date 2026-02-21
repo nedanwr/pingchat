@@ -2,8 +2,9 @@
 
 import { api } from "@pingchat/convex/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Plus, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -23,6 +24,7 @@ type ServerItem = {
   id: string;
   name: string;
   initials: string;
+  defaultChannelId: string | null;
   active: boolean;
 };
 
@@ -31,32 +33,39 @@ export function ServerRail() {
   const [name, setName] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [activeServerId, setActiveServerId] = useState<string | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
   const servers = useQuery(api.servers.listServers) ?? [];
   const createServer = useMutation(api.servers.createServer);
+  const activeServerId = getActiveGuildIdFromPath(pathname);
 
-  useEffect(() => {
-    if (servers.length === 0) {
-      setActiveServerId(null);
-      return;
-    }
-    if (activeServerId && servers.some((server) => server._id === activeServerId)) {
-      return;
-    }
-    setActiveServerId(servers[0]!._id);
-  }, [activeServerId, servers]);
-
-  const serverItems: ServerItem[] = servers.map((server, index) => ({
+  const serverItems: ServerItem[] = servers.map((server) => ({
     id: server._id,
     name: server.name,
     initials: toServerInitials(server.name),
-    active: activeServerId ? server._id === activeServerId : index === 0
+    defaultChannelId: server.defaultChannelId,
+    active: activeServerId ? server._id === activeServerId : false
   }));
 
   const canSubmit = name.trim().length >= 2;
 
   return (
     <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
+      <button
+        aria-label="Direct messages"
+        className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-semibold shadow-black/5 backdrop-blur-md transition ${
+          activeServerId === null
+            ? "border-primary/70 bg-primary/85 text-primary-foreground shadow-sm"
+            : "border-border/60 bg-background/35 hover:bg-accent/70"
+        }`}
+        onClick={() => {
+          router.push("/");
+        }}
+        type="button"
+      >
+        <Users className="size-4" />
+      </button>
+
       {serverItems.map((server) => (
         <button
           key={server.id}
@@ -67,7 +76,10 @@ export function ServerRail() {
               : "border-border/60 bg-background/35 hover:bg-accent/70"
           }`}
           onClick={() => {
-            setActiveServerId(server.id);
+            if (!server.defaultChannelId) {
+              return;
+            }
+            router.push(`/${server.id}/channels/${server.defaultChannelId}`);
           }}
           type="button"
         >
@@ -120,7 +132,13 @@ export function ServerRail() {
                 const createdServer = await createServer({
                   name: trimmedName
                 });
-                setActiveServerId(createdServer._id);
+                if (createdServer.defaultChannelId) {
+                  router.push(
+                    `/${createdServer.server._id}/channels/${createdServer.defaultChannelId}`
+                  );
+                } else {
+                  router.push("/");
+                }
                 setOpen(false);
               } catch (error) {
                 const message =
@@ -184,4 +202,9 @@ function toServerInitials(name: string) {
 
   const alnum = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "");
   return alnum.slice(0, 3) || "SV";
+}
+
+function getActiveGuildIdFromPath(pathname: string) {
+  const match = pathname.match(/^\/([^/]+)\/channels\/[^/]+$/);
+  return match?.[1] ?? null;
 }
