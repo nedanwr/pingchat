@@ -14,6 +14,17 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     username: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    status: v.optional(
+      v.union(
+        v.literal("online"),
+        v.literal("idle"),
+        v.literal("dnd"),
+        v.literal("invisible"),
+        v.literal("offline")
+      )
+    ),
+    presenceLastActiveAt: v.optional(v.number()),
+    presenceLastHeartbeatAt: v.optional(v.number()),
     updatedAt: v.optional(v.number())
   })
     .index("email", ["email"])
