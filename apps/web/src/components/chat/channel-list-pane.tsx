@@ -48,7 +48,7 @@ export function ChannelListPane({
   );
 
   return (
-    <aside className="border-border/50 bg-background/30 hidden w-[10.8rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[14.4rem] md:p-4 lg:w-[16.2rem]">
+    <aside className="border-border/50 bg-background/30 hidden w-[9.91rem] shrink-0 border-r p-3 backdrop-blur-xl md:block md:w-[13.22rem] md:p-4 lg:w-[14.87rem]">
       <div className="relative flex h-full min-h-0 flex-col">
         <div className="border-border/50 group -mx-3 -mt-3 flex h-[2.8125rem] items-center justify-between border-b px-3 md:-mx-4 md:-mt-4 md:px-4">
           <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
