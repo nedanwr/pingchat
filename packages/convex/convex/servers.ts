@@ -37,6 +37,9 @@ export const createServer = mutation({
       position: 0,
       parentId: categoryId
     });
+    await ctx.db.patch(serverId, {
+      defaultChannelId
+    });
 
     await addServerMember(ctx, serverId, userId);
 
@@ -85,17 +88,9 @@ export const listServers = query({
         if (!server) {
           return null;
         }
-
-        const defaultTextChannel = await ctx.db
-          .query("channels")
-          .withIndex("serverId_type_position", (q) =>
-            q.eq("serverId", membership.serverId).eq("type", 1)
-          )
-          .first();
-
         return {
           ...server,
-          defaultChannelId: defaultTextChannel?._id ?? null
+          defaultChannelId: server.defaultChannelId ?? null
         };
       })
     );
@@ -180,6 +175,7 @@ async function createServerRecord(
   return await ctx.db.insert("servers", {
     name: args.name,
     ownerId: args.ownerId,
+    defaultChannelId: null,
     updatedAt: Date.now(),
     ...(args.description !== undefined
       ? { description: args.description }
