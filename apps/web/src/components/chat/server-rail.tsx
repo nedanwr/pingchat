@@ -1,5 +1,7 @@
 "use client";
 
+import { api } from "@pingchat/convex/convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -24,32 +26,38 @@ type ServerItem = {
   active: boolean;
 };
 
-type NewServerPayload = {
-  name: string;
-  initials: string;
-};
-
-interface ServerRailProps {
-  servers: readonly ServerItem[];
-  onCreateServer?: (payload: NewServerPayload) => void;
-}
-
-export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
+export function ServerRail() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [localServers, setLocalServers] = useState<ServerItem[]>(() => [
-    ...servers
-  ]);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [activeServerId, setActiveServerId] = useState<string | null>(null);
+  const servers = useQuery(api.servers.listServers) ?? [];
+  const createServer = useMutation(api.servers.createServer);
 
   useEffect(() => {
-    setLocalServers([...servers]);
-  }, [servers]);
+    if (servers.length === 0) {
+      setActiveServerId(null);
+      return;
+    }
+    if (activeServerId && servers.some((server) => server._id === activeServerId)) {
+      return;
+    }
+    setActiveServerId(servers[0]!._id);
+  }, [activeServerId, servers]);
+
+  const serverItems: ServerItem[] = servers.map((server, index) => ({
+    id: server._id,
+    name: server.name,
+    initials: toServerInitials(server.name),
+    active: activeServerId ? server._id === activeServerId : index === 0
+  }));
 
   const canSubmit = name.trim().length >= 2;
 
   return (
     <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
-      {localServers.map((server) => (
+      {serverItems.map((server) => (
         <button
           key={server.id}
           aria-label={server.name}
@@ -58,6 +66,9 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
               ? "border-primary/70 bg-primary/85 text-primary-foreground shadow-sm"
               : "border-border/60 bg-background/35 hover:bg-accent/70"
           }`}
+          onClick={() => {
+            setActiveServerId(server.id);
+          }}
           type="button"
         >
           {server.initials}
@@ -69,6 +80,7 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
           setOpen(nextOpen);
           if (!nextOpen) {
             setName("");
+            setCreateError(null);
           }
         }}
         open={open}
@@ -96,26 +108,29 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
 
           <form
             className="space-y-4"
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault();
-              if (!canSubmit) {
+              if (!canSubmit || isCreating) {
                 return;
               }
-              const initials = toServerInitials(name);
-              onCreateServer?.({
-                name: name.trim(),
-                initials
-              });
-              setLocalServers((prev) => [
-                ...prev.map((item) => ({ ...item, active: false })),
-                {
-                  id: crypto.randomUUID(),
-                  name: name.trim(),
-                  initials,
-                  active: true
-                }
-              ]);
-              setOpen(false);
+              const trimmedName = name.trim();
+              setCreateError(null);
+              setIsCreating(true);
+              try {
+                const createdServer = await createServer({
+                  name: trimmedName
+                });
+                setActiveServerId(createdServer._id);
+                setOpen(false);
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to create server";
+                setCreateError(message);
+              } finally {
+                setIsCreating(false);
+              }
             }}
           >
             <div className="space-y-2">
@@ -134,14 +149,18 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
               />
             </div>
 
+            {createError ? (
+              <p className="text-destructive text-sm">{createError}</p>
+            ) : null}
+
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="ghost">
+                <Button disabled={isCreating} type="button" variant="ghost">
                   Cancel
                 </Button>
               </DialogClose>
-              <Button disabled={!canSubmit} type="submit">
-                Create server
+              <Button disabled={!canSubmit || isCreating} type="submit">
+                {isCreating ? "Creating..." : "Create server"}
               </Button>
             </DialogFooter>
           </form>
