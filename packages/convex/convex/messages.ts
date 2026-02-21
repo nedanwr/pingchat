@@ -8,6 +8,7 @@ import {
   type QueryCtx
 } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
+import { buildDefaultAvatarUrl } from "./avatar";
 import { requireServerMember } from "./serverMembers";
 
 const messageTypeValidator = v.union(
@@ -54,10 +55,30 @@ export const listChannelMessages = query({
     const userId = await requireAuthenticatedUserId(ctx);
     await requireChannelMemberAccess(ctx, args.channelId, userId);
 
-    return await ctx.db
+    const messages = await ctx.db
       .query("messages")
       .withIndex("channelId", (q) => q.eq("channelId", args.channelId))
       .collect();
+
+    return await Promise.all(
+      messages.map(async (message) => {
+        const sender = await ctx.db.get(message.userId);
+        const emailPrefix = sender?.email?.split("@")[0] ?? null;
+        const senderName =
+          sender?.displayName ?? sender?.username ?? emailPrefix ?? "User";
+        const senderAvatarUrl =
+          sender?.avatarUrl ??
+          buildDefaultAvatarUrl(
+            sender?.username ?? sender?.email ?? String(message.userId)
+          );
+
+        return {
+          ...message,
+          senderName,
+          senderAvatarUrl
+        };
+      })
+    );
   }
 });
 
