@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
+import { requireServerMember } from "./serverMembers";
 
 const channelTypeValidator = v.union(
   v.literal(0), // SERVER_CATEGORY
@@ -23,7 +24,7 @@ export const createChannel = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    await requireOwnedServer(ctx, args.serverId, userId);
+    await requireServerMember(ctx, args.serverId, userId);
     await assertValidParentChannel(ctx, args.serverId, args.parentId);
 
     const channelId = await ctx.db.insert("channels", {
@@ -50,7 +51,7 @@ export const getChannel = query({
       throw new Error("Channel not found");
     }
 
-    await requireOwnedServer(ctx, channel.serverId, userId);
+    await requireServerMember(ctx, channel.serverId, userId);
     return channel;
   }
 });
@@ -71,7 +72,7 @@ export const updateChannel = mutation({
       throw new Error("Channel not found");
     }
 
-    await requireOwnedServer(ctx, channel.serverId, userId);
+    await requireServerMember(ctx, channel.serverId, userId);
 
     if (
       args.name === undefined &&
@@ -112,27 +113,12 @@ export const deleteChannel = mutation({
       throw new Error("Channel not found");
     }
 
-    await requireOwnedServer(ctx, channel.serverId, userId);
+    await requireServerMember(ctx, channel.serverId, userId);
     await ctx.db.delete(args.channelId);
 
     return { success: true };
   }
 });
-
-async function requireOwnedServer(
-  ctx: QueryCtx | MutationCtx,
-  serverId: Id<"servers">,
-  userId: Id<"users">
-) {
-  const server = await ctx.db.get(serverId);
-  if (!server) {
-    throw new Error("Server not found");
-  }
-  if (server.ownerId !== userId) {
-    throw new Error("Not authorized to access this server");
-  }
-  return server;
-}
 
 async function assertValidParentChannel(
   ctx: QueryCtx | MutationCtx,
