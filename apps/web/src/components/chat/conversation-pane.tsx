@@ -69,8 +69,7 @@ export function ConversationPane({
         ))}
       </div>
 
-      <div className="bg-background/30 p-4 backdrop-blur-xl">
-        <div className="border-border/60 grid h-14 grid-cols-[auto_minmax(0,1fr)_6.5rem] items-center rounded-2xl border bg-linear-to-r from-zinc-500/12 to-black/20 px-2 shadow-sm backdrop-blur-xl sm:grid-cols-[auto_minmax(0,1fr)_8.5rem] sm:px-3 md:grid-cols-[auto_minmax(0,1fr)_10.5rem] lg:grid-cols-[auto_minmax(0,1fr)_12.75rem] dark:from-zinc-400/18 dark:to-black/40">
+      <div className="border-border/50 bg-background/30 flex h-16 items-center gap-1 border-t px-3 backdrop-blur-xl sm:px-4">
           <Button
             className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-8 rounded-xl sm:size-9"
             size="icon"
@@ -81,7 +80,7 @@ export function ConversationPane({
             <span className="sr-only">More actions</span>
           </Button>
           <Input
-            className="text-foreground placeholder:text-muted-foreground/90 h-full w-full min-w-0 border-transparent bg-transparent px-2 text-base focus-visible:border-transparent focus-visible:ring-0 sm:px-3 sm:text-lg dark:bg-transparent"
+            className="text-foreground placeholder:text-muted-foreground/90 h-full min-w-0 flex-1 border-transparent bg-transparent px-2 text-sm focus-visible:border-transparent focus-visible:ring-0 sm:px-3 sm:text-base dark:bg-transparent"
             id="composer"
             placeholder={composerPlaceholder}
           />
@@ -132,7 +131,6 @@ export function ConversationPane({
               <span className="sr-only">Effects</span>
             </Button>
           </div>
-        </div>
       </div>
     </section>
   );
