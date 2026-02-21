@@ -54,24 +54,30 @@ export default function GuildChannelPage() {
   );
 
   const resolvedChannels = channels ?? [];
+  const textChannels = resolvedChannels.filter((channel) => channel.type === 1);
+  const defaultTextChannel = textChannels[0] ?? null;
   const activeChannel =
-    resolvedChannels.find((channel) => channel._id === channelId) ?? null;
+    textChannels.find((channel) => channel._id === channelId) ?? null;
 
   useEffect(() => {
-    if (!guildId || channels === undefined || resolvedChannels.length === 0) {
+    if (!guildId || channels === undefined || !defaultTextChannel) {
       return;
     }
     if (activeChannel) {
       return;
     }
-    router.replace(`/${guildId}/channels/${resolvedChannels[0]!._id}`);
-  }, [activeChannel, channels, guildId, resolvedChannels, router]);
+    router.replace(`/${guildId}/channels/${defaultTextChannel._id}`);
+  }, [activeChannel, channels, defaultTextChannel, guildId, router]);
 
-  const channelSummaries = resolvedChannels.map((channel) => ({
-    id: channel._id,
-    name: channel.name,
-    active: channel._id === channelId
-  }));
+  const channelSummaries = resolvedChannels
+    .filter((channel) => channel.type === 0 || channel.type === 1)
+    .map((channel) => ({
+      id: channel._id,
+      name: channel.name,
+      type: channel.type === 0 ? 0 : 1,
+      parentId: channel.parentId,
+      active: channel._id === channelId
+    }));
 
   return (
     <main className="bg-background text-foreground relative h-screen w-screen overflow-hidden">
@@ -86,10 +92,11 @@ export default function GuildChannelPage() {
           serverName={server?.name ?? "Server"}
         />
         <ConversationPane
-          composerPlaceholder={`Message #${activeChannel?.name ?? "channel"}`}
+          composerPlaceholder={
+            activeChannel ? `Message #${activeChannel.name}` : "Message"
+          }
           messages={channelMessages}
-          sectionLabel="Channel"
-          title={`# ${activeChannel?.name ?? "channel"}`}
+          title={activeChannel ? `# ${activeChannel.name}` : ""}
         />
       </div>
     </main>
