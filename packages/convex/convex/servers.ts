@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
 import {
   addServerMember,
@@ -17,14 +18,24 @@ export const createServer = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    const now = Date.now();
-
-    const serverId = await ctx.db.insert("servers", {
-      name: args.name,
+    const serverId = await createServerRecord(ctx, {
       ownerId: userId,
-      updatedAt: now,
-      ...(args.description !== undefined ? { description: args.description } : {}),
-      ...(args.iconUrl !== undefined ? { iconUrl: args.iconUrl } : {})
+      name: args.name,
+      description: args.description,
+      iconUrl: args.iconUrl
+    });
+
+    const categoryId = await createCategoryChannel(ctx, {
+      serverId,
+      name: "Text Channels",
+      position: 0
+    });
+
+    await createTextChannel(ctx, {
+      serverId,
+      name: "general",
+      position: 0,
+      parentId: categoryId
     });
 
     await addServerMember(ctx, serverId, userId);
@@ -77,7 +88,9 @@ export const updateServer = mutation({
 
     await ctx.db.patch(args.serverId, {
       ...(args.name !== undefined ? { name: args.name } : {}),
-      ...(args.description !== undefined ? { description: args.description } : {}),
+      ...(args.description !== undefined
+        ? { description: args.description }
+        : {}),
       ...(args.iconUrl !== undefined ? { iconUrl: args.iconUrl } : {}),
       updatedAt: Date.now()
     });
@@ -117,3 +130,57 @@ export const deleteServer = mutation({
     return { success: true };
   }
 });
+
+async function createServerRecord(
+  ctx: MutationCtx,
+  args: {
+    ownerId: Id<"users">;
+    name: string;
+    description: string | undefined;
+    iconUrl: string | undefined;
+  }
+) {
+  return await ctx.db.insert("servers", {
+    name: args.name,
+    ownerId: args.ownerId,
+    updatedAt: Date.now(),
+    ...(args.description !== undefined
+      ? { description: args.description }
+      : {}),
+    ...(args.iconUrl !== undefined ? { iconUrl: args.iconUrl } : {})
+  });
+}
+
+async function createCategoryChannel(
+  ctx: MutationCtx,
+  args: {
+    serverId: Id<"servers">;
+    name: string;
+    position: number;
+  }
+) {
+  return await ctx.db.insert("channels", {
+    name: args.name,
+    type: 0,
+    serverId: args.serverId,
+    position: args.position
+  });
+}
+
+async function createTextChannel(
+  ctx: MutationCtx,
+  args: {
+    serverId: Id<"servers">;
+    name: string;
+    position: number;
+    parentId: Id<"channels">;
+  }
+) {
+  return await ctx.db.insert("channels", {
+    name: args.name,
+    type: 1,
+    serverId: args.serverId,
+    position: args.position,
+    parentId: args.parentId
+  });
+}
