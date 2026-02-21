@@ -1,6 +1,7 @@
 import { v } from "convex/values";
+import { paginationOptsValidator } from "convex/server";
 
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import {
   mutation,
   query,
@@ -60,23 +61,29 @@ export const listChannelMessages = query({
       .withIndex("channelId", (q) => q.eq("channelId", args.channelId))
       .collect();
 
-    return await Promise.all(
-      messages.map(async (message) => {
-        const sender = await ctx.db.get(message.userId);
-        const senderName = sender?.displayName ?? sender?.username ?? "User";
-        const senderAvatarUrl =
-          sender?.avatarUrl ??
-          buildDefaultAvatarUrl(
-            sender?.username ?? sender?.email ?? String(message.userId)
-          );
+    return await enrichMessagesWithSender(ctx, messages);
+  }
+});
 
-        return {
-          ...message,
-          senderName,
-          senderAvatarUrl
-        };
-      })
-    );
+export const listChannelMessagesPage = query({
+  args: {
+    channelId: v.id("channels"),
+    paginationOpts: paginationOptsValidator
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuthenticatedUserId(ctx);
+    await requireChannelMemberAccess(ctx, args.channelId, userId);
+
+    const page = await ctx.db
+      .query("messages")
+      .withIndex("channelId", (q) => q.eq("channelId", args.channelId))
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    return {
+      ...page,
+      page: await enrichMessagesWithSender(ctx, page.page)
+    };
   }
 });
 
@@ -158,4 +165,34 @@ async function requireMessageMemberAccess(
 
   await requireChannelMemberAccess(ctx, message.channelId, userId);
   return message;
+}
+
+async function enrichMessagesWithSender(
+  ctx: QueryCtx | MutationCtx,
+  messages: Doc<"messages">[]
+) {
+  const uniqueSenderIds = [...new Set(messages.map((message) => message.userId))];
+  const senders = await Promise.all(
+    uniqueSenderIds.map(async (senderId) => {
+      const sender = await ctx.db.get(senderId);
+      return [senderId, sender] as const;
+    })
+  );
+  const senderById = new Map(senders);
+
+  return messages.map((message) => {
+    const sender = senderById.get(message.userId);
+    const senderName = sender?.displayName ?? sender?.username ?? "User";
+    const senderAvatarUrl =
+      sender?.avatarUrl ??
+      buildDefaultAvatarUrl(
+        sender?.username ?? sender?.email ?? String(message.userId)
+      );
+
+    return {
+      ...message,
+      senderName,
+      senderAvatarUrl
+    };
+  });
 }
