@@ -54,7 +54,20 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         };
       }
     })
-  ]
+  ],
+  callbacks: {
+    afterUserCreatedOrUpdated: async (ctx, { userId }) => {
+      const user = await ctx.db.get(userId);
+      if (!user || user.avatarUrl) {
+        return;
+      }
+
+      const avatarUrl = buildDefaultAvatarUrl(
+        user.username ?? user.email ?? String(userId)
+      );
+      await ctx.db.patch(userId, { avatarUrl });
+    }
+  }
 });
 
 function getTrimmedString(value: Value | undefined) {
