@@ -6,6 +6,7 @@ import { usePreloadedQuery } from "convex/react";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 type SidebarUser = {
+  id: string;
   name: string;
   handle: string;
   avatarUrl: string;
@@ -48,6 +49,7 @@ export function CurrentUserProvider({
 
     return {
       user: {
+        id: currentUser.id,
         name,
         handle,
         avatarUrl: currentUser.avatarUrl
