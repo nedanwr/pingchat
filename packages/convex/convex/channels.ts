@@ -56,6 +56,23 @@ export const getChannel = query({
   }
 });
 
+export const listServerChannels = query({
+  args: {
+    serverId: v.id("servers")
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuthenticatedUserId(ctx);
+    await requireServerMember(ctx, args.serverId, userId);
+
+    const channels = await ctx.db
+      .query("channels")
+      .withIndex("serverId_position", (q) => q.eq("serverId", args.serverId))
+      .collect();
+
+    return channels.filter((channel) => channel.type === 1);
+  }
+});
+
 export const updateChannel = mutation({
   args: {
     channelId: v.id("channels"),
