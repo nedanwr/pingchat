@@ -29,6 +29,15 @@ export default defineSchema({
     updatedAt: v.number()
   }).index("ownerId", ["ownerId"]),
 
+  serverMembers: defineTable({
+    serverId: v.id("servers"),
+    userId: v.id("users"),
+    joinedAt: v.number()
+  })
+    .index("serverId", ["serverId"])
+    .index("userId", ["userId"])
+    .index("serverId_userId", ["serverId", "userId"]),
+
   channels: defineTable({
     name: v.string(),
     type: v.union(
