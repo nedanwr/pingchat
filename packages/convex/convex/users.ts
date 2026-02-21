@@ -15,12 +15,17 @@ export const getCurrentUser = query({
       return null;
     }
 
+    const avatarUrl = user.avatarUrl;
+    if (!avatarUrl) {
+      throw new Error("User is missing avatarUrl");
+    }
+
     return {
       id: user._id,
       displayName: user.displayName ?? user.name ?? null,
       username: user.username ?? null,
       email: user.email ?? null,
-      imageUrl: user.imageUrl ?? user.image ?? null
+      avatarUrl
     };
   }
 });
