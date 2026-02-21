@@ -52,5 +52,18 @@ export default defineSchema({
     parentId: v.optional(v.id("channels"))
   })
     .index("serverId", ["serverId"])
-    .index("serverId_position", ["serverId", "position"])
+    .index("serverId_position", ["serverId", "position"]),
+
+  messages: defineTable({
+    channelId: v.id("channels"),
+    userId: v.id("users"),
+    content: v.string(),
+    editedTime: v.optional(v.number()),
+    type: v.union(
+      v.literal(0), // DEFAULT
+      v.literal(1) // REPLY
+    )
+  })
+    .index("channelId", ["channelId"])
+    .index("channelId_userId", ["channelId", "userId"])
 });
