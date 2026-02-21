@@ -2,13 +2,14 @@ import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { type Value } from "convex/values";
 
+import { buildDefaultAvatarUrl } from "./avatar";
+
 type PasswordProfile = {
   email: string;
   username?: string;
   displayName?: string;
   name?: string;
-  imageUrl?: string;
-  image?: string;
+  avatarUrl?: string;
 };
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -22,10 +23,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         }
 
         const displayName = getTrimmedOptionalString(params.displayName);
-        const imageUrl = getTrimmedOptionalString(params.imageUrl);
+        const avatarUrl = getTrimmedOptionalString(params.avatarUrl);
 
-        if (imageUrl && !isValidUrl(imageUrl)) {
-          throw new Error("imageUrl must be a valid URL");
+        if (avatarUrl && !isValidUrl(avatarUrl)) {
+          throw new Error("avatarUrl must be a valid URL");
         }
 
         if (flow !== "signUp") {
@@ -33,8 +34,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
             email,
             ...(displayName ? { displayName } : {}),
             ...(displayName ? { name: displayName } : {}),
-            ...(imageUrl ? { imageUrl } : {}),
-            ...(imageUrl ? { image: imageUrl } : {})
+            ...(avatarUrl ? { avatarUrl } : {})
           };
         }
 
@@ -42,14 +42,15 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!username) {
           throw new Error("Username is required");
         }
+        const resolvedAvatarUrl =
+          avatarUrl ?? buildDefaultAvatarUrl(username || email);
 
         return {
           email,
           username,
           ...(displayName ? { displayName } : {}),
           ...(displayName ? { name: displayName } : {}),
-          ...(imageUrl ? { imageUrl } : {}),
-          ...(imageUrl ? { image: imageUrl } : {})
+          ...(resolvedAvatarUrl ? { avatarUrl: resolvedAvatarUrl } : {})
         };
       }
     })
