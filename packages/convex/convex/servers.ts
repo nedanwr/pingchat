@@ -31,7 +31,7 @@ export const createServer = mutation({
       position: 0
     });
 
-    await createTextChannel(ctx, {
+    const defaultChannelId = await createTextChannel(ctx, {
       serverId,
       name: "general",
       position: 0,
@@ -40,7 +40,10 @@ export const createServer = mutation({
 
     await addServerMember(ctx, serverId, userId);
 
-    return await requireServer(ctx, serverId);
+    return {
+      server: await requireServer(ctx, serverId),
+      defaultChannelId
+    };
   }
 });
 
@@ -77,7 +80,26 @@ export const listServers = query({
       .collect();
 
     const servers = await Promise.all(
-      memberships.map(async (membership) => await ctx.db.get(membership.serverId))
+      memberships.map(async (membership) => {
+        const server = await ctx.db.get(membership.serverId);
+        if (!server) {
+          return null;
+        }
+
+        const channels = await ctx.db
+          .query("channels")
+          .withIndex("serverId_position", (q) =>
+            q.eq("serverId", membership.serverId)
+          )
+          .collect();
+        const defaultChannel =
+          channels.find((channel) => channel.type === 1) ?? channels[0] ?? null;
+
+        return {
+          ...server,
+          defaultChannelId: defaultChannel?._id ?? null
+        };
+      })
     );
 
     return servers.filter((server) => server !== null);
