@@ -1,7 +1,12 @@
 import { v } from "convex/values";
 
 import type { Id } from "./_generated/dataModel";
-import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import {
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx
+} from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
 import { requireServerMember } from "./serverMembers";
 
@@ -69,7 +74,9 @@ export const listServerChannels = query({
       .withIndex("serverId_position", (q) => q.eq("serverId", args.serverId))
       .collect();
 
-    return channels.filter((channel) => channel.type === 1);
+    return channels.filter(
+      (channel) => channel.type !== 3 && channel.type !== 4
+    );
   }
 });
 
