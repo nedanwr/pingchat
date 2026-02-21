@@ -4,7 +4,7 @@ import { api } from "@pingchat/convex/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { Plus, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -39,6 +39,16 @@ export function ServerRail() {
   const createServer = useMutation(api.servers.createServer);
   const activeServerId = getActiveGuildIdFromPath(pathname);
 
+  useEffect(() => {
+    router.prefetch("/me");
+    for (const server of servers) {
+      if (!server.defaultChannelId) {
+        continue;
+      }
+      router.prefetch(`/${server._id}/channels/${server.defaultChannelId}`);
+    }
+  }, [router, servers]);
+
   const serverItems: ServerItem[] = servers.map((server) => ({
     id: server._id,
     name: server.name,
@@ -59,7 +69,7 @@ export function ServerRail() {
             : "border-border/60 bg-background/35 hover:bg-accent/70"
         }`}
         onClick={() => {
-          router.push("/");
+          router.push("/me");
         }}
         type="button"
       >
@@ -137,7 +147,7 @@ export function ServerRail() {
                     `/${createdServer.server._id}/channels/${createdServer.defaultChannelId}`
                   );
                 } else {
-                  router.push("/");
+                  router.push("/me");
                 }
                 setOpen(false);
               } catch (error) {
