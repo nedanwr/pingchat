@@ -52,7 +52,8 @@ export default defineSchema({
     parentId: v.optional(v.id("channels"))
   })
     .index("serverId", ["serverId"])
-    .index("serverId_position", ["serverId", "position"]),
+    .index("serverId_position", ["serverId", "position"])
+    .index("serverId_type_position", ["serverId", "type", "position"]),
 
   messages: defineTable({
     channelId: v.id("channels"),
