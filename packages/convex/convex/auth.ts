@@ -58,14 +58,38 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
     afterUserCreatedOrUpdated: async (ctx, { userId }) => {
       const user = await ctx.db.get(userId);
-      if (!user || user.avatarUrl) {
+      if (!user) {
         return;
       }
 
-      const avatarUrl = buildDefaultAvatarUrl(
-        user.username ?? user.email ?? String(userId)
-      );
-      await ctx.db.patch(userId, { avatarUrl });
+      const now = Date.now();
+      const patch: {
+        avatarUrl?: string;
+        status?: "online";
+        presenceLastActiveAt?: number;
+        presenceLastHeartbeatAt?: number;
+      } = {};
+
+      if (!user.avatarUrl) {
+        patch.avatarUrl = buildDefaultAvatarUrl(
+          user.username ?? user.email ?? String(userId)
+        );
+      }
+      if (!user.status) {
+        patch.status = "online";
+      }
+      if (user.presenceLastActiveAt === undefined) {
+        patch.presenceLastActiveAt = now;
+      }
+      if (user.presenceLastHeartbeatAt === undefined) {
+        patch.presenceLastHeartbeatAt = now;
+      }
+
+      if (Object.keys(patch).length === 0) {
+        return;
+      }
+
+      await ctx.db.patch(userId, patch);
     }
   }
 });
