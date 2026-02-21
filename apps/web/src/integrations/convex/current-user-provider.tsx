@@ -40,15 +40,11 @@ export function CurrentUserProvider({
       };
     }
 
-    const emailPrefix = currentUser.email?.split("@")[0] ?? null;
-    const name =
-      currentUser.displayName ?? currentUser.username ?? emailPrefix ?? "User";
+    const name = currentUser.displayName ?? currentUser.username ?? "User";
 
     const handle = currentUser.username
       ? toHandle(currentUser.username)
-      : emailPrefix
-        ? toHandle(emailPrefix)
-        : "@user";
+      : "@user";
 
     return {
       user: {
