@@ -3,9 +3,11 @@ import { DirectMessagesPane } from "~/components/chat/direct-messages-pane";
 import { ServerRail } from "~/components/chat/server-rail";
 
 const currentUser = "You";
+const currentUserAvatarUrl = "https://i.pravatar.cc/80?img=12";
 const activeRecipient = {
   name: "Kai"
 } as const;
+const activeRecipientAvatarUrl = "https://i.pravatar.cc/80?img=14";
 
 const servers = [
   { id: "pc", name: "Pingchat", initials: "PC", active: true },
@@ -19,24 +21,28 @@ const directMessages = [
   {
     id: "kai",
     name: "Kai",
+    avatarUrl: "https://i.pravatar.cc/80?img=14",
     unread: 2,
     active: true
   },
   {
     id: "nora",
     name: "Nora",
+    avatarUrl: "https://i.pravatar.cc/80?img=23",
     unread: 0,
     active: false
   },
   {
     id: "mina",
     name: "Mina",
+    avatarUrl: "https://i.pravatar.cc/80?img=32",
     unread: 0,
     active: false
   },
   {
     id: "ari",
     name: "Ari",
+    avatarUrl: "https://i.pravatar.cc/80?img=41",
     unread: 1,
     active: false
   }
@@ -46,12 +52,14 @@ const dmMessages = [
   {
     id: "1",
     sender: "Kai",
+    avatarUrl: activeRecipientAvatarUrl,
     time: "9:41 AM",
     content: "Can we align on the server navigation spacing before lunch?"
   },
   {
     id: "2",
     sender: currentUser,
+    avatarUrl: currentUserAvatarUrl,
     time: "9:43 AM",
     content:
       "Yes. I can push a pass that matches auth surface spacing in 10 minutes."
@@ -59,15 +67,11 @@ const dmMessages = [
   {
     id: "3",
     sender: "Kai",
+    avatarUrl: activeRecipientAvatarUrl,
     time: "9:44 AM",
     content: "Perfect. Send it here when ready and I will review immediately."
   }
 ] as const;
-const loggedInUser = {
-  name: "You",
-  handle: "@you",
-  status: "Online"
-} as const;
 
 export default function MePage() {
   return (
@@ -75,10 +79,7 @@ export default function MePage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.12),transparent_45%),radial-gradient(circle_at_bottom_right,hsl(var(--accent-foreground)/0.08),transparent_40%)]" />
       <div className="bg-background/55 ring-border/40 relative flex h-full w-full overflow-hidden ring-1 backdrop-blur-2xl">
         <ServerRail servers={servers} />
-        <DirectMessagesPane
-          conversations={directMessages}
-          currentUser={loggedInUser}
-        />
+        <DirectMessagesPane conversations={directMessages} />
         <ConversationPane
           composerPlaceholder={`Send a private message to ${activeRecipient.name}`}
           messages={dmMessages}
