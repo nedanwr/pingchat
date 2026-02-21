@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { type ReactNode, useState } from "react";
 import { Gift, Plus, Smile, Sparkles, Sticker } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -19,6 +21,8 @@ interface ConversationPaneProps {
   headerAction?: ReactNode;
   messages: readonly ConversationMessage[];
   composerPlaceholder: string;
+  onSendMessage?: (content: string) => Promise<void> | void;
+  sendError?: string | null;
 }
 
 function avatarFallback(seed: string) {
@@ -30,8 +34,13 @@ export function ConversationPane({
   title,
   headerAction,
   messages,
-  composerPlaceholder
+  composerPlaceholder,
+  onSendMessage,
+  sendError
 }: ConversationPaneProps) {
+  const [composerValue, setComposerValue] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   return (
     <section className="bg-background/20 flex min-w-0 flex-1 flex-col backdrop-blur-sm">
       <header className="border-border/50 bg-background/30 flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl">
@@ -61,7 +70,7 @@ export function ConversationPane({
                 <p className="text-sm font-semibold">{message.sender}</p>
                 <p className="text-muted-foreground text-xs">{message.time}</p>
               </div>
-              <p className="text-muted-foreground pt-0.5 text-sm">
+              <p className="text-foreground/90 pt-0.5 text-sm">
                 {message.content}
               </p>
             </div>
@@ -69,7 +78,32 @@ export function ConversationPane({
         ))}
       </div>
 
-      <div className="border-border/50 bg-background/30 flex h-16 items-center gap-1 border-t px-3 backdrop-blur-xl sm:px-4">
+      <form
+        className="border-border/50 bg-background/30 border-t px-3 backdrop-blur-xl sm:px-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+
+          if (!onSendMessage || isSubmitting) {
+            return;
+          }
+
+          const trimmedContent = composerValue.trim();
+          if (!trimmedContent) {
+            return;
+          }
+
+          setIsSubmitting(true);
+          try {
+            await onSendMessage(trimmedContent);
+            setComposerValue("");
+          } catch {
+            // Parent surface handles displaying send errors.
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      >
+        <div className="flex h-16 items-center gap-1">
           <Button
             className="text-muted-foreground hover:text-foreground hover:bg-accent/70 size-8 rounded-xl sm:size-9"
             size="icon"
@@ -82,7 +116,11 @@ export function ConversationPane({
           <Input
             className="text-foreground placeholder:text-muted-foreground/90 h-full min-w-0 flex-1 border-transparent bg-transparent px-2 text-sm focus-visible:border-transparent focus-visible:ring-0 sm:px-3 sm:text-base dark:bg-transparent"
             id="composer"
+            onChange={(event) => {
+              setComposerValue(event.target.value);
+            }}
             placeholder={composerPlaceholder}
+            value={composerValue}
           />
           <div className="flex items-center justify-end gap-1 pl-2">
             <Button
@@ -131,7 +169,11 @@ export function ConversationPane({
               <span className="sr-only">Effects</span>
             </Button>
           </div>
-      </div>
+        </div>
+        {sendError ? (
+          <p className="text-destructive pb-2 text-xs">{sendError}</p>
+        ) : null}
+      </form>
     </section>
   );
 }
