@@ -15,6 +15,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode
 } from "react";
 
@@ -53,6 +54,11 @@ export function CurrentUserProvider({
 }: CurrentUserProviderProps) {
   const currentUser = usePreloadedQuery(preloadedCurrentUser);
   const connectionState = useConvexConnectionState();
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    setHasHydrated(true);
+  }, []);
 
   const value = useMemo<CurrentUserContextValue>(() => {
     if (currentUser === null) {
@@ -73,12 +79,13 @@ export function CurrentUserProvider({
         name,
         handle,
         avatarUrl: currentUser.avatarUrl,
-        status: connectionState.isWebSocketConnected
-          ? currentUser.status
-          : "offline"
+        status:
+          hasHydrated && !connectionState.isWebSocketConnected
+            ? "offline"
+            : currentUser.status
       }
     };
-  }, [connectionState.isWebSocketConnected, currentUser]);
+  }, [connectionState.isWebSocketConnected, currentUser, hasHydrated]);
 
   return (
     <CurrentUserContext.Provider value={value}>
