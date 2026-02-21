@@ -67,6 +67,23 @@ export const getServer = query({
   }
 });
 
+export const listServers = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuthenticatedUserId(ctx);
+    const memberships = await ctx.db
+      .query("serverMembers")
+      .withIndex("userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    const servers = await Promise.all(
+      memberships.map(async (membership) => await ctx.db.get(membership.serverId))
+    );
+
+    return servers.filter((server) => server !== null);
+  }
+});
+
 export const updateServer = mutation({
   args: {
     serverId: v.id("servers"),
