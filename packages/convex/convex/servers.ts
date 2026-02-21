@@ -86,18 +86,16 @@ export const listServers = query({
           return null;
         }
 
-        const channels = await ctx.db
+        const defaultTextChannel = await ctx.db
           .query("channels")
-          .withIndex("serverId_position", (q) =>
-            q.eq("serverId", membership.serverId)
+          .withIndex("serverId_type_position", (q) =>
+            q.eq("serverId", membership.serverId).eq("type", 1)
           )
-          .collect();
-        const defaultChannel =
-          channels.find((channel) => channel.type === 1) ?? channels[0] ?? null;
+          .first();
 
         return {
           ...server,
-          defaultChannelId: defaultChannel?._id ?? null
+          defaultChannelId: defaultTextChannel?._id ?? null
         };
       })
     );
