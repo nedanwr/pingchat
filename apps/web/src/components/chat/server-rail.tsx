@@ -5,7 +5,7 @@ import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
 import { Plus, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -62,13 +62,35 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   }));
 
   const canSubmit = name.trim().length >= 2;
-  const prefetchRoute = (route: string) => {
-    if (prefetchedRoutesRef.current.has(route)) {
-      return;
-    }
-    prefetchedRoutesRef.current.add(route);
-    router.prefetch(route);
-  };
+  const prefetchRoute = useCallback(
+    (route: string) => {
+      if (prefetchedRoutesRef.current.has(route)) {
+        return;
+      }
+      prefetchedRoutesRef.current.add(route);
+      router.prefetch(route);
+    },
+    [router]
+  );
+
+  useEffect(() => {
+    const routesToPrefetch = [
+      "/me",
+      ...serverItems
+        .map((server) =>
+          server.targetChannelId
+            ? `/${server.id}/channels/${server.targetChannelId}`
+            : null
+        )
+        .filter((route): route is string => route !== null)
+    ];
+
+    return runWhenIdle(() => {
+      for (const route of routesToPrefetch) {
+        prefetchRoute(route);
+      }
+    });
+  }, [prefetchRoute, serverItems]);
 
   return (
     <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
@@ -251,4 +273,38 @@ function toServerInitials(name: string) {
 function getActiveGuildIdFromPath(pathname: string) {
   const match = /^\/([^/]+)\/channels\/[^/]+$/.exec(pathname);
   return match?.[1] ?? null;
+}
+
+function runWhenIdle(callback: () => void) {
+  if (typeof globalThis.window === "undefined") {
+    return () => {};
+  }
+
+  const idleCallbacks = globalThis as typeof globalThis & {
+    requestIdleCallback?: (
+      callback: IdleRequestCallback,
+      options?: IdleRequestOptions
+    ) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  };
+
+  if (
+    typeof idleCallbacks.requestIdleCallback === "function" &&
+    typeof idleCallbacks.cancelIdleCallback === "function"
+  ) {
+    const idleCallbackId = idleCallbacks.requestIdleCallback(() => {
+      callback();
+    });
+    return () => {
+      idleCallbacks.cancelIdleCallback?.(idleCallbackId);
+    };
+  }
+
+  const timeoutId = globalThis.setTimeout(() => {
+    callback();
+  }, 120);
+
+  return () => {
+    globalThis.clearTimeout(timeoutId);
+  };
 }
