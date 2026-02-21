@@ -20,12 +20,13 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { useLastAccessedChannelStore } from "~/stores/last-accessed-channel-store";
 
 type ServerItem = {
   id: string;
   name: string;
   initials: string;
-  defaultChannelId: string | null;
+  targetChannelId: string | null;
   active: boolean;
 };
 
@@ -44,12 +45,19 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   const createServer = useMutation(api.servers.createServer);
   const activeServerId = getActiveGuildIdFromPath(pathname);
   const prefetchedRoutesRef = useRef<Set<string>>(new Set());
+  const lastChannelByGuildId = useLastAccessedChannelStore(
+    (state) => state.lastChannelByGuildId
+  );
+  const setLastAccessedChannel = useLastAccessedChannelStore(
+    (state) => state.setLastAccessedChannel
+  );
 
   const serverItems: ServerItem[] = servers.map((server) => ({
     id: server._id,
     name: server.name,
     initials: toServerInitials(server.name),
-    defaultChannelId: server.defaultChannelId,
+    targetChannelId:
+      lastChannelByGuildId[server._id] ?? server.defaultChannelId,
     active: activeServerId ? server._id === activeServerId : false
   }));
 
@@ -95,22 +103,23 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
               : "border-border/60 bg-background/35 hover:bg-accent/70"
           }`}
           onClick={() => {
-            if (!server.defaultChannelId) {
+            if (!server.targetChannelId) {
               return;
             }
-            router.push(`/${server.id}/channels/${server.defaultChannelId}`);
+            setLastAccessedChannel(server.id, server.targetChannelId);
+            router.push(`/${server.id}/channels/${server.targetChannelId}`);
           }}
           onFocus={() => {
-            if (!server.defaultChannelId) {
+            if (!server.targetChannelId) {
               return;
             }
-            prefetchRoute(`/${server.id}/channels/${server.defaultChannelId}`);
+            prefetchRoute(`/${server.id}/channels/${server.targetChannelId}`);
           }}
           onMouseEnter={() => {
-            if (!server.defaultChannelId) {
+            if (!server.targetChannelId) {
               return;
             }
-            prefetchRoute(`/${server.id}/channels/${server.defaultChannelId}`);
+            prefetchRoute(`/${server.id}/channels/${server.targetChannelId}`);
           }}
           type="button"
         >
@@ -164,6 +173,10 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
                   name: trimmedName
                 });
                 if (createdServer.defaultChannelId) {
+                  setLastAccessedChannel(
+                    createdServer.server._id,
+                    createdServer.defaultChannelId
+                  );
                   router.push(
                     `/${createdServer.server._id}/channels/${createdServer.defaultChannelId}`
                   );
@@ -236,6 +249,6 @@ function toServerInitials(name: string) {
 }
 
 function getActiveGuildIdFromPath(pathname: string) {
-  const match = pathname.match(/^\/([^/]+)\/channels\/[^/]+$/);
+  const match = /^\/([^/]+)\/channels\/[^/]+$/.exec(pathname);
   return match?.[1] ?? null;
 }
