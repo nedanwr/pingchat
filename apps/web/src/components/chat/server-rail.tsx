@@ -5,7 +5,7 @@ import type { Preloaded } from "convex/react";
 import { useMutation, usePreloadedQuery } from "convex/react";
 import { Plus, Users } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -43,16 +43,7 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   const servers = usePreloadedQuery(preloadedServers);
   const createServer = useMutation(api.servers.createServer);
   const activeServerId = getActiveGuildIdFromPath(pathname);
-
-  useEffect(() => {
-    router.prefetch("/me");
-    for (const server of servers) {
-      if (!server.defaultChannelId) {
-        continue;
-      }
-      router.prefetch(`/${server._id}/channels/${server.defaultChannelId}`);
-    }
-  }, [router, servers]);
+  const prefetchedRoutesRef = useRef<Set<string>>(new Set());
 
   const serverItems: ServerItem[] = servers.map((server) => ({
     id: server._id,
@@ -63,6 +54,13 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
   }));
 
   const canSubmit = name.trim().length >= 2;
+  const prefetchRoute = (route: string) => {
+    if (prefetchedRoutesRef.current.has(route)) {
+      return;
+    }
+    prefetchedRoutesRef.current.add(route);
+    router.prefetch(route);
+  };
 
   return (
     <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
@@ -75,6 +73,12 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
         }`}
         onClick={() => {
           router.push("/me");
+        }}
+        onFocus={() => {
+          prefetchRoute("/me");
+        }}
+        onMouseEnter={() => {
+          prefetchRoute("/me");
         }}
         type="button"
       >
@@ -95,6 +99,18 @@ export function ServerRail({ preloadedServers }: ServerRailProps) {
               return;
             }
             router.push(`/${server.id}/channels/${server.defaultChannelId}`);
+          }}
+          onFocus={() => {
+            if (!server.defaultChannelId) {
+              return;
+            }
+            prefetchRoute(`/${server.id}/channels/${server.defaultChannelId}`);
+          }}
+          onMouseEnter={() => {
+            if (!server.defaultChannelId) {
+              return;
+            }
+            prefetchRoute(`/${server.id}/channels/${server.defaultChannelId}`);
           }}
           type="button"
         >
