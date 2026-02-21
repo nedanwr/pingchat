@@ -36,6 +36,7 @@ export default defineSchema({
     ownerId: v.id("users"),
     description: v.optional(v.string()),
     iconUrl: v.optional(v.string()),
+    defaultChannelId: v.optional(v.union(v.id("channels"), v.null())),
     updatedAt: v.number()
   }).index("ownerId", ["ownerId"]),
 
