@@ -63,9 +63,7 @@ export const listChannelMessages = query({
     return await Promise.all(
       messages.map(async (message) => {
         const sender = await ctx.db.get(message.userId);
-        const emailPrefix = sender?.email?.split("@")[0] ?? null;
-        const senderName =
-          sender?.displayName ?? sender?.username ?? emailPrefix ?? "User";
+        const senderName = sender?.displayName ?? sender?.username ?? "User";
         const senderAvatarUrl =
           sender?.avatarUrl ??
           buildDefaultAvatarUrl(
