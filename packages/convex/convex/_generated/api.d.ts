@@ -13,6 +13,7 @@ import type * as authHelpers from "../authHelpers.js";
 import type * as avatar from "../avatar.js";
 import type * as channels from "../channels.js";
 import type * as http from "../http.js";
+import type * as messages from "../messages.js";
 import type * as serverMembers from "../serverMembers.js";
 import type * as servers from "../servers.js";
 import type * as users from "../users.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   avatar: typeof avatar;
   channels: typeof channels;
   http: typeof http;
+  messages: typeof messages;
   serverMembers: typeof serverMembers;
   servers: typeof servers;
   users: typeof users;
