@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -37,7 +37,6 @@ interface ServerRailProps {
 export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [initialsInput, setInitialsInput] = useState("");
   const [localServers, setLocalServers] = useState<ServerItem[]>(() => [
     ...servers
   ]);
@@ -46,16 +45,7 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
     setLocalServers([...servers]);
   }, [servers]);
 
-  const initials = useMemo(
-    () =>
-      initialsInput
-        .trim()
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 3),
-    [initialsInput]
-  );
-  const canSubmit = name.trim().length >= 2 && initials.length >= 2;
+  const canSubmit = name.trim().length >= 2;
 
   return (
     <aside className="border-border/50 bg-background/35 hidden w-[3.74rem] shrink-0 flex-col items-center gap-3 border-r p-1.5 backdrop-blur-xl md:flex lg:w-[4.68rem] lg:p-3">
@@ -79,7 +69,6 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
           setOpen(nextOpen);
           if (!nextOpen) {
             setName("");
-            setInitialsInput("");
           }
         }}
         open={open}
@@ -96,12 +85,12 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
           </Button>
         </DialogTrigger>
 
-        <DialogContent>
+        <DialogContent className="sm:max-w-[28.8rem]">
           <DialogHeader>
             <DialogTitle>Create Server</DialogTitle>
             <DialogDescription>
-              Create a new workspace server for channels and direct
-              collaboration.
+              Create a server for your friends to hang out, chat, and jump into
+              shared channels.
             </DialogDescription>
           </DialogHeader>
 
@@ -112,6 +101,7 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
               if (!canSubmit) {
                 return;
               }
+              const initials = toServerInitials(name);
               onCreateServer?.({
                 name: name.trim(),
                 initials
@@ -129,7 +119,9 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="server-name">Server name</Label>
+              <Label htmlFor="server-name">
+                Server name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 autoFocus
                 id="server-name"
@@ -140,22 +132,6 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
                 placeholder="Frontend Guild"
                 value={name}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="server-initials">Initials</Label>
-              <Input
-                id="server-initials"
-                maxLength={3}
-                onChange={(event) => {
-                  setInitialsInput(event.target.value);
-                }}
-                placeholder="FG"
-                value={initialsInput}
-              />
-              <p className="text-muted-foreground text-xs">
-                Preview: <span className="font-medium">{initials || "--"}</span>
-              </p>
             </div>
 
             <DialogFooter>
@@ -173,4 +149,20 @@ export function ServerRail({ servers, onCreateServer }: ServerRailProps) {
       </Dialog>
     </aside>
   );
+}
+
+function toServerInitials(name: string) {
+  const trimmed = name.trim();
+  const words = trimmed.split(/\s+/).filter(Boolean);
+
+  if (words.length > 1) {
+    return words
+      .slice(0, 3)
+      .map((word) => word[0] ?? "")
+      .join("")
+      .toUpperCase();
+  }
+
+  const alnum = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return alnum.slice(0, 3) || "SV";
 }
