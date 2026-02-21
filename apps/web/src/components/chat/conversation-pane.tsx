@@ -1,6 +1,14 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { Gift, Plus, Smile, Sparkles, Sticker } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -23,10 +31,74 @@ interface ConversationPaneProps {
   composerPlaceholder: string;
   onSendMessage?: (content: string) => Promise<void> | void;
   sendError?: string | null;
+  scrollIdentity?: string;
+  onLoadOlderMessages?: () => Promise<void> | void;
+  canLoadOlderMessages?: boolean;
+  isLoadingOlderMessages?: boolean;
 }
+
+const DEFAULT_MESSAGE_ROW_HEIGHT = 96;
+const VIRTUALIZATION_OVERSCAN_PX = 600;
 
 function avatarFallback(seed: string) {
   return seed.trim().charAt(0).toUpperCase() || "?";
+}
+
+function getMessageRowHeight(
+  messageId: string,
+  measuredHeights: Map<string, number>
+) {
+  return measuredHeights.get(messageId) ?? DEFAULT_MESSAGE_ROW_HEIGHT;
+}
+
+function findStartIndex(offsets: number[], rowHeights: number[], target: number) {
+  if (offsets.length === 0) {
+    return 0;
+  }
+
+  let low = 0;
+  let high = offsets.length - 1;
+  let answer = offsets.length - 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const rowStart = offsets[mid] ?? 0;
+    const rowHeight = rowHeights[mid] ?? DEFAULT_MESSAGE_ROW_HEIGHT;
+    const rowEnd = rowStart + rowHeight;
+
+    if (rowEnd >= target) {
+      answer = mid;
+      high = mid - 1;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  return answer;
+}
+
+function findEndIndex(offsets: number[], target: number) {
+  if (offsets.length === 0) {
+    return 0;
+  }
+
+  let low = 0;
+  let high = offsets.length - 1;
+  let answer = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const rowStart = offsets[mid] ?? 0;
+
+    if (rowStart <= target) {
+      answer = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return answer;
 }
 
 export function ConversationPane({
@@ -36,10 +108,207 @@ export function ConversationPane({
   messages,
   composerPlaceholder,
   onSendMessage,
-  sendError
+  sendError,
+  scrollIdentity,
+  onLoadOlderMessages,
+  canLoadOlderMessages = false,
+  isLoadingOlderMessages = false
 }: ConversationPaneProps) {
   const [composerValue, setComposerValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [heightVersion, setHeightVersion] = useState(0);
+
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToBottomRef = useRef(false);
+  const messageHeightsRef = useRef<Map<string, number>>(new Map());
+  const loadOlderSnapshotRef = useRef<{
+    pending: boolean;
+    previousScrollHeight: number;
+  }>({
+    pending: false,
+    previousScrollHeight: 0
+  });
+
+  const requestOlderMessages = useCallback(() => {
+    if (
+      !onLoadOlderMessages ||
+      !canLoadOlderMessages ||
+      isLoadingOlderMessages ||
+      loadOlderSnapshotRef.current.pending
+    ) {
+      return;
+    }
+
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    loadOlderSnapshotRef.current = {
+      pending: true,
+      previousScrollHeight: viewport.scrollHeight
+    };
+
+    void onLoadOlderMessages();
+  }, [canLoadOlderMessages, isLoadingOlderMessages, onLoadOlderMessages]);
+
+  useEffect(() => {
+    hasScrolledToBottomRef.current = false;
+    loadOlderSnapshotRef.current.pending = false;
+    messageHeightsRef.current = new Map();
+    setHeightVersion(0);
+  }, [scrollIdentity]);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || hasScrolledToBottomRef.current || messages.length === 0) {
+      return;
+    }
+
+    viewport.scrollTop = viewport.scrollHeight;
+    hasScrolledToBottomRef.current = true;
+  }, [messages.length, scrollIdentity]);
+
+  useLayoutEffect(() => {
+    if (isLoadingOlderMessages || !loadOlderSnapshotRef.current.pending) {
+      return;
+    }
+
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      loadOlderSnapshotRef.current.pending = false;
+      return;
+    }
+
+    const scrollHeightDelta =
+      viewport.scrollHeight - loadOlderSnapshotRef.current.previousScrollHeight;
+    viewport.scrollTop += scrollHeightDelta;
+    loadOlderSnapshotRef.current.pending = false;
+  }, [isLoadingOlderMessages, messages.length, heightVersion]);
+
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const updateViewportHeight = () => {
+      setViewportHeight(viewport.clientHeight);
+    };
+
+    updateViewportHeight();
+    const resizeObserver = new ResizeObserver(updateViewportHeight);
+    resizeObserver.observe(viewport);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const topSentinel = topSentinelRef.current;
+
+    if (!viewport || !topSentinel || !canLoadOlderMessages) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) {
+          return;
+        }
+        requestOlderMessages();
+      },
+      {
+        root: viewport,
+        rootMargin: "200px 0px 0px 0px",
+        threshold: 0
+      }
+    );
+
+    observer.observe(topSentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [canLoadOlderMessages, requestOlderMessages]);
+
+  const setMessageRowNode = useCallback(
+    (messageId: string, node: HTMLDivElement | null) => {
+      if (!node) {
+        return;
+      }
+
+      const measuredHeight = node.offsetHeight;
+      const previousHeight = messageHeightsRef.current.get(messageId);
+
+      if (previousHeight === measuredHeight) {
+        return;
+      }
+
+      messageHeightsRef.current.set(messageId, measuredHeight);
+      setHeightVersion((currentVersion) => currentVersion + 1);
+    },
+    []
+  );
+
+  const { offsets, startIndex, endIndex, totalHeight } = useMemo(() => {
+    const rowHeights = messages.map((message) =>
+      getMessageRowHeight(message.id, messageHeightsRef.current)
+    );
+
+    const nextOffsets = new Array<number>(messages.length);
+    let runningOffset = 0;
+
+    for (let index = 0; index < messages.length; index += 1) {
+      nextOffsets[index] = runningOffset;
+      runningOffset += rowHeights[index] ?? DEFAULT_MESSAGE_ROW_HEIGHT;
+    }
+
+    if (messages.length === 0) {
+      return {
+        offsets: nextOffsets,
+        startIndex: 0,
+        endIndex: 0,
+        totalHeight: 0
+      };
+    }
+
+    const visibleTop = Math.max(scrollTop - VIRTUALIZATION_OVERSCAN_PX, 0);
+    const visibleBottom =
+      scrollTop + viewportHeight + VIRTUALIZATION_OVERSCAN_PX;
+
+    const nextStartIndex = findStartIndex(nextOffsets, rowHeights, visibleTop);
+    const nextEndIndex = Math.max(
+      nextStartIndex,
+      findEndIndex(nextOffsets, visibleBottom)
+    );
+
+    return {
+      offsets: nextOffsets,
+      startIndex: nextStartIndex,
+      endIndex: nextEndIndex,
+      totalHeight: runningOffset
+    };
+  }, [heightVersion, messages, scrollTop, viewportHeight]);
+
+  const visibleMessages = useMemo(() => {
+    if (messages.length === 0) {
+      return [] as Array<{
+        message: ConversationMessage;
+        top: number;
+      }>;
+    }
+
+    return messages.slice(startIndex, endIndex + 1).map((message, offsetIndex) => ({
+      message,
+      top: offsets[startIndex + offsetIndex] ?? 0
+    }));
+  }, [endIndex, messages, offsets, startIndex]);
 
   return (
     <section className="bg-background/20 flex min-w-0 flex-1 flex-col backdrop-blur-sm">
@@ -55,27 +324,62 @@ export function ConversationPane({
         {headerAction}
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {messages.map((message) => (
-          <article key={message.id} className="flex gap-3 rounded-xl px-2 py-2">
-            <Avatar className="border-border/60 bg-background/40 size-10 shrink-0 border">
-              <AvatarImage
-                alt={`${message.sender} profile picture`}
-                src={message.avatarUrl}
-              />
-              <AvatarFallback>{avatarFallback(message.sender)}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="flex items-baseline gap-2">
-                <p className="text-sm font-semibold">{message.sender}</p>
-                <p className="text-muted-foreground text-xs">{message.time}</p>
-              </div>
-              <p className="text-foreground/90 pt-0.5 text-sm">
-                {message.content}
-              </p>
+      <div
+        className="relative flex-1 overflow-y-auto p-4"
+        onScroll={(event) => {
+          const nextScrollTop = event.currentTarget.scrollTop;
+          setScrollTop(nextScrollTop);
+
+          if (nextScrollTop <= 64) {
+            requestOlderMessages();
+          }
+        }}
+        ref={viewportRef}
+      >
+        {isLoadingOlderMessages ? (
+          <div className="pointer-events-none absolute inset-x-0 top-2 z-10 text-center">
+            <p className="text-muted-foreground text-xs">Loading older messages...</p>
+          </div>
+        ) : null}
+
+        <div
+          className="relative"
+          style={{
+            height: Math.max(totalHeight, 1)
+          }}
+        >
+          <div className="absolute top-0 h-px w-full" ref={topSentinelRef} />
+
+          {visibleMessages.map(({ message, top }) => (
+            <div
+              className="absolute inset-x-0 pb-3"
+              key={message.id}
+              ref={(node) => {
+                setMessageRowNode(message.id, node);
+              }}
+              style={{ top }}
+            >
+              <article className="flex gap-3 rounded-xl px-2 py-2">
+                <Avatar className="border-border/60 bg-background/40 size-10 shrink-0 border">
+                  <AvatarImage
+                    alt={`${message.sender} profile picture`}
+                    src={message.avatarUrl}
+                  />
+                  <AvatarFallback>{avatarFallback(message.sender)}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-sm font-semibold">{message.sender}</p>
+                    <p className="text-muted-foreground text-xs">{message.time}</p>
+                  </div>
+                  <p className="text-foreground/90 pt-0.5 text-sm">
+                    {message.content}
+                  </p>
+                </div>
+              </article>
             </div>
-          </article>
-        ))}
+          ))}
+        </div>
       </div>
 
       <form
