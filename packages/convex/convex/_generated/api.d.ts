@@ -9,8 +9,11 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as authHelpers from "../authHelpers.js";
 import type * as avatar from "../avatar.js";
+import type * as channels from "../channels.js";
 import type * as http from "../http.js";
+import type * as servers from "../servers.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,8 +24,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  authHelpers: typeof authHelpers;
   avatar: typeof avatar;
+  channels: typeof channels;
   http: typeof http;
+  servers: typeof servers;
   users: typeof users;
 }>;
 
