@@ -1,7 +1,12 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+import {
+  getAuthUserId,
+  modifyAccountCredentials,
+  retrieveAccount
+} from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
-import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
+import { action, mutation, query } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
 import { buildDefaultAvatarUrl } from "./avatar";
 
@@ -95,6 +100,54 @@ export const touchCurrentUserPresence = mutation({
       presenceLastHeartbeatAt: now,
       ...(args.isActive ? { presenceLastActiveAt: now } : {}),
       updatedAt: now
+    });
+
+    return { success: true };
+  }
+});
+
+export const changeCurrentUserPassword = action({
+  args: {
+    currentPassword: v.string(),
+    newPassword: v.string()
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Authentication required");
+    }
+
+    if (args.newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters.");
+    }
+
+    if (args.currentPassword === args.newPassword) {
+      throw new Error("New password must be different.");
+    }
+
+    const currentUser = await ctx.runQuery(api.users.getCurrentUser, {});
+    if (!currentUser?.email) {
+      throw new Error("A verified email is required to change your password.");
+    }
+
+    try {
+      await retrieveAccount(ctx, {
+        provider: "password",
+        account: {
+          id: currentUser.email,
+          secret: args.currentPassword
+        }
+      });
+    } catch {
+      throw new Error("Current password is incorrect.");
+    }
+
+    await modifyAccountCredentials(ctx, {
+      provider: "password",
+      account: {
+        id: currentUser.email,
+        secret: args.newPassword
+      }
     });
 
     return { success: true };
