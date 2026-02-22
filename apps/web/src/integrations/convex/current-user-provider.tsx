@@ -28,6 +28,9 @@ type SidebarUser = {
   id: string;
   name: string;
   handle: string;
+  displayName: string | null;
+  username: string | null;
+  email: string | null;
   avatarUrl: string;
   status: SidebarUserStatus;
 };
@@ -78,6 +81,9 @@ export function CurrentUserProvider({
         id: currentUser.id,
         name,
         handle,
+        displayName: currentUser.displayName,
+        username: currentUser.username,
+        email: currentUser.email,
         avatarUrl: currentUser.avatarUrl,
         status:
           hasHydrated && !connectionState.isWebSocketConnected
@@ -126,7 +132,7 @@ function CurrentUserPresenceTracker({
     }
 
     lastActivityTouchAtRef.current = now;
-    void touchCurrentUserPresence({ isActive: true }).catch(() => {});
+    void touchCurrentUserPresence({ isActive: true }).catch(() => undefined);
   }, [
     connectionState.isWebSocketConnected,
     currentUserId,
@@ -138,7 +144,7 @@ function CurrentUserPresenceTracker({
       return;
     }
 
-    void touchCurrentUserPresence({ isActive: false }).catch(() => {});
+    void touchCurrentUserPresence({ isActive: false }).catch(() => undefined);
   }, [
     connectionState.isWebSocketConnected,
     currentUserId,
