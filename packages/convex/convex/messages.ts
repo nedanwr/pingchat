@@ -10,7 +10,7 @@ import {
 } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
 import { buildDefaultAvatarUrl } from "./avatar";
-import { requireServerMember } from "./serverMembers";
+import { requireServerMembership } from "./serverMembers";
 
 const messageTypeValidator = v.union(
   v.literal(0), // DEFAULT
@@ -149,7 +149,7 @@ async function requireChannelMemberAccess(
     throw new Error("Channel not found");
   }
 
-  await requireServerMember(ctx, channel.serverId, userId);
+  await requireServerMembership(ctx, channel.serverId, userId);
   return channel;
 }
 
