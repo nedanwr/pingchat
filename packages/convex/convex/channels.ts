@@ -8,7 +8,7 @@ import {
   type QueryCtx
 } from "./_generated/server";
 import { requireAuthenticatedUserId } from "./authHelpers";
-import { requireServerMember } from "./serverMembers";
+import { requireServerMember, requireServerMembership } from "./serverMembers";
 
 const channelTypeValidator = v.union(
   v.literal(0), // SERVER_CATEGORY
@@ -62,7 +62,7 @@ export const getChannel = query({
       throw new Error("Channel not found");
     }
 
-    const server = await requireServerMember(ctx, channel.serverId, userId);
+    await requireServerMembership(ctx, channel.serverId, userId);
     return channel;
   }
 });
@@ -73,7 +73,7 @@ export const listServerChannels = query({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuthenticatedUserId(ctx);
-    await requireServerMember(ctx, args.serverId, userId);
+    await requireServerMembership(ctx, args.serverId, userId);
 
     const channels = await ctx.db
       .query("channels")
