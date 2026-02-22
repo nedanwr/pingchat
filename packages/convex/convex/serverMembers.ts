@@ -41,11 +41,20 @@ export async function requireServerMember(
   serverId: Id<"servers">,
   userId: Id<"users">
 ) {
+  await requireServerMembership(ctx, serverId, userId);
+  return await requireServer(ctx, serverId);
+}
+
+export async function requireServerMembership(
+  ctx: Ctx,
+  serverId: Id<"servers">,
+  userId: Id<"users">
+) {
   const membership = await getServerMembership(ctx, serverId, userId);
   if (!membership) {
     throw new Error("Not authorized to access this server");
   }
-  return await requireServer(ctx, serverId);
+  return membership;
 }
 
 export async function addServerMember(
