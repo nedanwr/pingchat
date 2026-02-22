@@ -2,17 +2,10 @@
 
 import { Settings } from "lucide-react";
 
+import { CurrentUserSettingsDialog } from "~/components/chat/current-user-settings-dialog";
 import { useCurrentSidebarUser } from "~/integrations/convex/current-user-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
 
 interface SidebarCurrentUserProps {
@@ -59,96 +52,49 @@ export function SidebarCurrentUserCard({ className }: SidebarCurrentUserProps) {
 
   return (
     <div className="border-border/50 -mx-3 mt-1.75 border-t px-2 pt-1.75 sm:-mx-4 sm:px-3">
-      <Dialog>
-        <div
-          className={cn(
-            "flex items-center justify-between gap-2 px-1.5 py-0.5",
-            className
-          )}
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="relative shrink-0">
-              <Avatar className="border-border/60 bg-background/40 size-8 border">
-                {user ? (
-                  <AvatarImage
-                    alt={`${resolvedUser.name} profile picture`}
-                    src={user.avatarUrl}
-                  />
-                ) : null}
-                <AvatarFallback>
-                  {avatarFallback(resolvedUser.name)}
-                </AvatarFallback>
-              </Avatar>
-              <span
-                aria-label={`Status: ${statusLabel}`}
-                className={cn(
-                  "absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-[hsl(var(--background))]",
-                  statusColorClass(status)
-                )}
-                role="status"
-              />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
-                {resolvedUser.name}
-              </p>
-              <p className="text-muted-foreground truncate text-xs">
-                {resolvedUser.handle}
-              </p>
-            </div>
-          </div>
-          <DialogTrigger asChild>
-            <Button size="icon-sm" type="button" variant="ghost">
-              <Settings className="size-4.5" />
-              <span className="sr-only">Open settings</span>
-            </Button>
-          </DialogTrigger>
-        </div>
-
-        <DialogContent className="sm:max-w-[24rem]">
-          <DialogHeader>
-            <DialogTitle>User Settings</DialogTitle>
-            <DialogDescription>
-              Manage your profile visibility and current account details.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="bg-muted/40 flex items-center gap-3 rounded-md border p-3">
-            <Avatar className="border-border/60 bg-background size-10 border">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 px-1.5 py-0.5",
+          className
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="relative shrink-0">
+            <Avatar className="border-border/60 bg-background/40 size-8 border">
               {user ? (
                 <AvatarImage
                   alt={`${resolvedUser.name} profile picture`}
                   src={user.avatarUrl}
                 />
               ) : null}
-              <AvatarFallback>
-                {avatarFallback(resolvedUser.name)}
-              </AvatarFallback>
+              <AvatarFallback>{avatarFallback(resolvedUser.name)}</AvatarFallback>
             </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
-                {resolvedUser.name}
-              </p>
-              <p className="text-muted-foreground truncate text-xs">
-                {resolvedUser.handle}
-              </p>
-            </div>
             <span
-              aria-label={`Current status: ${statusLabel}`}
+              aria-label={`Status: ${statusLabel}`}
               className={cn(
-                "ml-auto inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
-                status === "online" && "bg-emerald-500/15 text-emerald-700",
-                status === "idle" && "bg-amber-500/15 text-amber-700",
-                status === "dnd" && "bg-rose-500/15 text-rose-700",
-                (status === "offline" || status === "invisible") &&
-                  "bg-zinc-500/15 text-zinc-700"
+                "absolute right-0 bottom-0 size-2.5 rounded-full border-2 border-[hsl(var(--background))]",
+                statusColorClass(status)
               )}
-            >
-              {statusLabel}
-            </span>
+              role="status"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{resolvedUser.name}</p>
+            <p className="text-muted-foreground truncate text-xs">
+              {resolvedUser.handle}
+            </p>
+          </div>
+        </div>
+
+        <CurrentUserSettingsDialog
+          trigger={
+            <Button size="icon-sm" type="button" variant="ghost">
+              <Settings className="size-4.5" />
+              <span className="sr-only">Open settings</span>
+            </Button>
+          }
+        />
+      </div>
     </div>
   );
 }
